@@ -1,0 +1,5 @@
+---
+alwaysApply: true
+---
+
+ONLY build a mocked frontend for all features for now. Don't build any backend.
