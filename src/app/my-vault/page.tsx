@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAuthState, logout } from "@/lib/auth";
+import { Scanner } from "@yudiel/react-qr-scanner";
+import CardScanner from "@/components/CardScanner";
 
 // Mock data structure for player vault
 interface SetVault {
@@ -70,6 +72,17 @@ export default function MyVaultPage() {
     logout();
     router.push("/");
   };
+
+  // async function handleCardScan(uniqueToken: string, cardObject: any) {
+  //   console.log("cardObject", cardObject.card.reference);
+
+  //   const response = await fetch(
+  //     `https://api.altered.gg/public/cards/${cardObject.card.reference}?locale=en`
+  //   );
+  //   const data = await response.json();
+  //   console.log("set", (data as any).cardSet.code);
+  // }
+  // <CardScanner onScan={handleCardScan} />
 
   if (loading) {
     return (
@@ -166,9 +179,12 @@ export default function MyVaultPage() {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">Your Vault by Set</h2>
-            <button className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-4 py-2">
-              + Add Booster
-            </button>
+            <Link
+              href="/my-vault/add-cards"
+              className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-4 py-2"
+            >
+              + Add Cards
+            </Link>
           </div>
 
           <div className="space-y-4">
