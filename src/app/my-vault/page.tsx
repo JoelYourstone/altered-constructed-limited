@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import Header from "@/components/Header";
 
 // Mock data structure for player vault
 interface SetVault {
@@ -67,45 +68,15 @@ export default async function MyVaultPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-black/[.08] dark:border-white/[.145]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-            <Link
-              href="/"
-              className="text-xl sm:text-2xl font-bold hover:opacity-80 truncate"
-            >
-              <span className="hidden sm:inline">Altered Vault Format</span>
-              <span className="sm:hidden">Vault Format</span>
-            </Link>
-            <nav className="flex flex-wrap items-center gap-3 sm:gap-6">
-              <Link
-                href="/my-vault"
-                className="text-sm font-medium text-foreground hover:text-foreground transition-colors"
-              >
-                My Vault
-              </Link>
-              <Link
-                href="/players"
-                className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors"
-              >
-                Players
-              </Link>
-              <div className="flex items-center gap-2 sm:gap-4 sm:ml-4 sm:pl-4 sm:border-l border-black/[.08] dark:border-white/[.145]">
-                <span className="text-sm text-foreground/70 max-w-[120px] sm:max-w-[200px] truncate">
-                  USER
-                </span>
-              </div>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header session={session} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Player Info */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Your vault</h1>
           <p className="text-foreground/70">
-            Welcome back, <span className="font-medium">USER</span>
+            Welcome back,{" "}
+            <span className="font-medium">{session.user?.name}</span>
           </p>
         </div>
 

@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
-import UserButton from "@/components/user-button";
+import Header from "@/components/Header";
 import Link from "next/link";
+import { SignIn } from "@/components/auth-components";
 
 export default async function HomePage() {
   const session = await auth();
@@ -8,14 +9,7 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-black/[.08] dark:border-white/[.145]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Altered Vault Format</h1>
-          <div className="flex gap-3">
-            <UserButton />
-          </div>
-        </div>
-      </header>
+      <Header variant="simple" session={session} />
 
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
@@ -56,12 +50,18 @@ export default async function HomePage() {
 
         {/* Call to Action */}
         <div className="text-center mb-12">
-          <Link
-            href="/register"
-            className="inline-flex rounded-full border border-solid border-transparent transition-colors items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-base px-8 py-3"
-          >
-            Get Started — Register Now
-          </Link>
+          {session ? (
+            <Link
+              href="/my-vault"
+              className="inline-flex rounded-full border border-solid border-transparent transition-colors items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-base px-8 py-3"
+            >
+              Go to my Vault
+            </Link>
+          ) : (
+            <SignIn className="inline-flex rounded-full border border-solid border-transparent transition-colors items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-base px-8 py-3">
+              Get Started — Register Now
+            </SignIn>
+          )}
         </div>
 
         {/* Format Overview */}

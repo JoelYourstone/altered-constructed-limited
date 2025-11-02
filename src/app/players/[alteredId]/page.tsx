@@ -1,55 +1,26 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
-import { getAuthState, logout } from "@/lib/auth";
-import { getPlayerByAlteredId, Player } from "@/lib/mockPlayers";
+import { getPlayerByAlteredId } from "@/lib/mockPlayers";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
+import Header from "@/components/Header";
 
-export default function PlayerVaultPage() {
-  const router = useRouter();
-  const params = useParams();
-  const alteredId = params.alteredId as string;
+interface PlayerVaultPageProps {
+  params: Promise<{ alteredId: string }>;
+}
 
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email: string; alteredId: string } | null>(
-    null
-  );
-  const [player, setPlayer] = useState<Player | null>(null);
-
-  useEffect(() => {
-    const authState = getAuthState();
-    if (!authState.isAuthenticated || !authState.user) {
-      router.push("/login");
-      return;
-    }
-    setUser(authState.user);
-
-    const foundPlayer = getPlayerByAlteredId(alteredId);
-    if (!foundPlayer) {
-      router.push("/players");
-      return;
-    }
-
-    setPlayer(foundPlayer);
-    setLoading(false);
-  }, [router, alteredId]);
-
-  const handleLogout = () => {
-    logout();
-    router.push("/");
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-foreground">Loading...</div>
-      </div>
-    );
+export default async function PlayerVaultPage({
+  params,
+}: PlayerVaultPageProps) {
+  const session = await auth();
+  if (!session) {
+    return redirect("/api/auth/signin?callbackUrl=/players");
   }
 
+  const { alteredId } = await params;
+  const player = getPlayerByAlteredId(alteredId);
+
   if (!player) {
-    return null;
+    return redirect("/players");
   }
 
   const totalBoosters = player.vault.reduce(
@@ -65,41 +36,7 @@ export default function PlayerVaultPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-black/[.08] dark:border-white/[.145]">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
-          <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-            <Link href="/" className="text-xl sm:text-2xl font-bold hover:opacity-80 truncate">
-              <span className="hidden sm:inline">Altered Vault Format</span>
-              <span className="sm:hidden">Vault Format</span>
-            </Link>
-            <nav className="flex flex-wrap items-center gap-3 sm:gap-6">
-              <Link
-                href="/my-vault"
-                className="text-sm font-medium text-foreground/70 hover:text-foreground transition-colors"
-              >
-                My Vault
-              </Link>
-              <Link
-                href="/players"
-                className="text-sm font-medium text-foreground hover:text-foreground transition-colors"
-              >
-                Players
-              </Link>
-              <div className="flex items-center gap-2 sm:gap-4 sm:ml-4 sm:pl-4 sm:border-l border-black/[.08] dark:border-white/[.145]">
-                <span className="text-sm text-foreground/70 max-w-[120px] sm:max-w-[200px] truncate">
-                  {user?.alteredId}
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm px-3 py-1.5 sm:px-4 sm:py-2"
-                >
-                  Logout
-                </button>
-              </div>
-            </nav>
-          </div>
-        </div>
-      </header>
+      <Header session={session} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Back Link */}
@@ -114,7 +51,9 @@ export default function PlayerVaultPage() {
 
         {/* Player Info */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{player.alteredId}&apos;s Vault</h1>
+          <h1 className="text-3xl font-bold mb-2">
+            {player.alteredId}&apos;s Vault
+          </h1>
           <p className="text-foreground/70">
             Viewing {player.alteredId}&apos;s card vault
           </p>
@@ -211,4 +150,3 @@ export default function PlayerVaultPage() {
     </div>
   );
 }
-

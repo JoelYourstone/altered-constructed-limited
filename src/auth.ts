@@ -20,4 +20,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
 });
 
-declare module "next-auth" {}
+declare module "next-auth" {
+  interface User {
+    alteredId?: string;
+  }
+
+  interface Session {
+    user: {
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+      alteredId?: string | null;
+    };
+  }
+}
