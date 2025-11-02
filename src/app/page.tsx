@@ -1,6 +1,10 @@
+import { auth } from "@/auth";
+import UserButton from "@/components/user-button";
 import Link from "next/link";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const session = await auth();
+  console.log(session);
   return (
     <div className="min-h-screen">
       {/* Header */}
@@ -8,18 +12,7 @@ export default function HomePage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold">Altered Vault Format</h1>
           <div className="flex gap-3">
-            <Link
-              href="/login"
-              className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm px-5 py-2"
-            >
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-5 py-2"
-            >
-              Register
-            </Link>
+            <UserButton />
           </div>
         </div>
       </header>
@@ -118,9 +111,9 @@ export default function HomePage() {
                 Budget-Friendly
               </h4>
               <p>
-                You won&apos;t fall down the expensive singles rabbit hole. A fixed
-                number of boosters means a fixed budget. Your wallet stays safe
-                while you still enjoy competitive constructed play.
+                You won&apos;t fall down the expensive singles rabbit hole. A
+                fixed number of boosters means a fixed budget. Your wallet stays
+                safe while you still enjoy competitive constructed play.
               </p>
             </div>
             <div>
@@ -159,9 +152,9 @@ export default function HomePage() {
               </h4>
               <p>
                 Playing against standard constructed decks? You have all the
-                advantages. Win, and you&apos;ve beaten a &apos;pay-to-win&apos; deck with your
-                limited pool. Lose, and you&apos;ve got a built-in excuse. Either
-                way, you&apos;re the underdog hero!
+                advantages. Win, and you&apos;ve beaten a &apos;pay-to-win&apos;
+                deck with your limited pool. Lose, and you&apos;ve got a
+                built-in excuse. Either way, you&apos;re the underdog hero!
               </p>
             </div>
           </div>

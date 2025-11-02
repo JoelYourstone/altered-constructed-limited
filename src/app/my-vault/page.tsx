@@ -1,9 +1,6 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { auth } from "@/auth";
 import Link from "next/link";
-import { getAuthState, logout } from "@/lib/auth";
+import { redirect } from "next/navigation";
 
 // Mock data structure for player vault
 interface SetVault {
@@ -17,15 +14,15 @@ interface SetVault {
   };
 }
 
-export default function MyVaultPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email: string; alteredId: string } | null>(
-    null
-  );
+export default async function MyVaultPage() {
+  const session = await auth();
+
+  if (!session) {
+    return redirect("/api/auth/signin?callbackUrl=/my-vault");
+  }
 
   // Mock player vault data
-  const [playerVault] = useState<SetVault[]>([
+  const playerVault: SetVault[] = [
     {
       setName: "Whispers from the Maze",
       boosterCount: 12,
@@ -44,7 +41,7 @@ export default function MyVaultPage() {
     //   seasonLimit: 12,
     //   cards: { common: 32, rare: 6, unique: 2 },
     // },
-  ]);
+  ];
 
   const totalBoosters = playerVault.reduce(
     (sum, set) => sum + set.boosterCount,
@@ -56,21 +53,6 @@ export default function MyVaultPage() {
     0
   );
 
-  useEffect(() => {
-    const authState = getAuthState();
-    if (!authState.isAuthenticated || !authState.user) {
-      router.push("/login");
-      return;
-    }
-    setUser(authState.user);
-    setLoading(false);
-  }, [router]);
-
-  const handleLogout = () => {
-    logout();
-    router.push("/");
-  };
-
   // async function handleCardScan(uniqueToken: string, cardObject: any) {
   //   console.log("cardObject", cardObject.card.reference);
 
@@ -81,14 +63,6 @@ export default function MyVaultPage() {
   //   console.log("set", (data as any).cardSet.code);
   // }
   // <CardScanner onScan={handleCardScan} />
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-foreground">Loading...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -118,14 +92,8 @@ export default function MyVaultPage() {
               </Link>
               <div className="flex items-center gap-2 sm:gap-4 sm:ml-4 sm:pl-4 sm:border-l border-black/[.08] dark:border-white/[.145]">
                 <span className="text-sm text-foreground/70 max-w-[120px] sm:max-w-[200px] truncate">
-                  {user?.alteredId}
+                  USER
                 </span>
-                <button
-                  onClick={handleLogout}
-                  className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm px-3 py-1.5 sm:px-4 sm:py-2"
-                >
-                  Logout
-                </button>
               </div>
             </nav>
           </div>
@@ -137,7 +105,7 @@ export default function MyVaultPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Your vault</h1>
           <p className="text-foreground/70">
-            Welcome back, <span className="font-medium">{user?.alteredId}</span>
+            Welcome back, <span className="font-medium">USER</span>
           </p>
         </div>
 

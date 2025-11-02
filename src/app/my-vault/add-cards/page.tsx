@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { getAuthState } from "@/lib/auth";
+import { useRef } from "react";
 import CardScanner from "@/components/CardScanner";
 import ProcessingScanArea, {
   ProcessingScanAreaRef,
@@ -21,23 +19,12 @@ import BoosterCardList from "@/components/BoosterCardList";
 import CompletedBoostersSection from "@/components/CompletedBoostersSection";
 
 export default function AddCardsPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const processingRef = useRef<ProcessingScanAreaRef>(null);
 
-  const { data: scanningState, isLoading: isLoadingState } = useScanningState();
+  const { data: scanningState } = useScanningState();
   const addCardMutation = useAddCard();
   const clearScanningMutation = useClearScanning();
   const removeFailedScanMutation = useRemoveFailedScan();
-
-  useEffect(() => {
-    const authState = getAuthState();
-    if (!authState.isAuthenticated || !authState.user) {
-      router.push("/login");
-      return;
-    }
-    setLoading(false);
-  }, [router]);
 
   function handleTinyUrlScan(tinyUrl: string) {
     processingRef.current?.onTinyUrlScan(tinyUrl);
@@ -66,7 +53,7 @@ export default function AddCardsPage() {
         cardSubtypeString: data.cardSubTypes?.[0]?.name,
         cardSet: {
           code: data.cardSet.code,
-          name: data.cardSet.name
+          name: data.cardSet.name,
         },
         faction: data.mainFaction,
         imagePath: data?.imagePath,
@@ -99,16 +86,10 @@ export default function AddCardsPage() {
     }
   };
 
-  if (loading || isLoadingState) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-foreground">Loading...</div>
-      </div>
-    );
-  }
-
   const activeBoosters = scanningState ? scanningState.activeBoosters : [];
-  const completedBoosters = scanningState ? scanningState.completedBoosters : {};
+  const completedBoosters = scanningState
+    ? scanningState.completedBoosters
+    : {};
   const failedScans = scanningState ? scanningState.failedScans : [];
 
   return (
@@ -224,7 +205,7 @@ export default function AddCardsPage() {
         )}
 
         {/* Completed Boosters */}
-        <CompletedBoostersSection 
+        <CompletedBoostersSection
           completedBoosters={completedBoosters}
           maxBoostersPerSet={MAX_BOOSTERS_PER_SET}
           activeSets={ACTIVE_SETS}
@@ -234,15 +215,24 @@ export default function AddCardsPage() {
         {failedScans.length > 0 && (
           <div className="mb-6 space-y-2">
             <h2 className="font-semibold text-sm text-red-500/70">
-              You have reached the set limit for these cards. <br />These cards are NOT part of your vault.
+              You have reached the set limit for these cards. <br />
+              These cards are NOT part of your vault.
             </h2>
             <div className="space-y-1">
               {failedScans.map((failedScan) => (
                 <ThinCard key={failedScan.timestamp} card={failedScan.card} />
               ))}
             </div>
-            
-            <button onClick={() => failedScans.forEach((failedScan) => removeFailedScanMutation.mutate(failedScan.timestamp))} type="button" className="w-full rounded-lg border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors py-3 font-medium disabled:opacity-50 mt-4">
+
+            <button
+              onClick={() =>
+                failedScans.forEach((failedScan) =>
+                  removeFailedScanMutation.mutate(failedScan.timestamp)
+                )
+              }
+              type="button"
+              className="w-full rounded-lg border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors py-3 font-medium disabled:opacity-50 mt-4"
+            >
               OK, I have sorted them out, clear list.
             </button>
           </div>
@@ -250,7 +240,8 @@ export default function AddCardsPage() {
 
         {/* Clear All Button */}
         {process.env.NODE_ENV === "development" &&
-          (activeBoosters.length > 0 || Object.keys(completedBoosters).length > 0) && (
+          (activeBoosters.length > 0 ||
+            Object.keys(completedBoosters).length > 0) && (
             <div className="mt-8 pt-6 border-t border-black/[.08] dark:border-white/[.145]">
               <button
                 onClick={handleClearAll}

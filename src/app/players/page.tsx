@@ -1,42 +1,15 @@
-"use client";
-
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { getAuthState, logout } from "@/lib/auth";
-import { getAllPlayers, Player } from "@/lib/mockPlayers";
+import { getAllPlayers } from "@/lib/mockPlayers";
+import { auth } from "@/auth";
+import { redirect } from "next/navigation";
 
-export default function PlayersPage() {
-  const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email: string; alteredId: string } | null>(
-    null
-  );
-  const [players, setPlayers] = useState<Player[]>([]);
-
-  useEffect(() => {
-    const authState = getAuthState();
-    if (!authState.isAuthenticated || !authState.user) {
-      router.push("/login");
-      return;
-    }
-    setUser(authState.user);
-    setPlayers(getAllPlayers());
-    setLoading(false);
-  }, [router]);
-
-  const handleLogout = () => {
-    logout();
-    router.push("/");
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-foreground">Loading...</div>
-      </div>
-    );
+export default async function PlayersPage() {
+  const session = await auth();
+  if (!session) {
+    return redirect("/api/auth/signin?callbackUrl=/players");
   }
+
+  const players = getAllPlayers();
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,7 +17,10 @@ export default function PlayersPage() {
       <header className="border-b border-black/[.08] dark:border-white/[.145]">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-center">
-            <Link href="/" className="text-xl sm:text-2xl font-bold hover:opacity-80 truncate">
+            <Link
+              href="/"
+              className="text-xl sm:text-2xl font-bold hover:opacity-80 truncate"
+            >
               <span className="hidden sm:inline">Altered Vault Format</span>
               <span className="sm:hidden">Vault Format</span>
             </Link>
@@ -63,14 +39,8 @@ export default function PlayersPage() {
               </Link>
               <div className="flex items-center gap-2 sm:gap-4 sm:ml-4 sm:pl-4 sm:border-l border-black/[.08] dark:border-white/[.145]">
                 <span className="text-sm text-foreground/70 max-w-[120px] sm:max-w-[200px] truncate">
-                  {user?.alteredId}
+                  {session.user?.alteredId}
                 </span>
-                <button
-                  onClick={handleLogout}
-                  className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm px-3 py-1.5 sm:px-4 sm:py-2"
-                >
-                  Logout
-                </button>
               </div>
             </nav>
           </div>
@@ -146,4 +116,3 @@ export default function PlayersPage() {
     </div>
   );
 }
-
