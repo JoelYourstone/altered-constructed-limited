@@ -118,7 +118,7 @@ export default function HomePage() {
                 Budget-Friendly
               </h4>
               <p>
-                You won't fall down the expensive singles rabbit hole. A fixed
+                You won&apos;t fall down the expensive singles rabbit hole. A fixed
                 number of boosters means a fixed budget. Your wallet stays safe
                 while you still enjoy competitive constructed play.
               </p>
@@ -128,7 +128,7 @@ export default function HomePage() {
                 Creative Deckbuilding
               </h4>
               <p>
-                Like sealed, every player's vault is unique. You'll
+                Like sealed, every player&apos;s vault is unique. You&apos;ll
                 theorycrafted decks based on your specific card pool, leading to
                 diverse strategies and unexpected matchups.
               </p>
@@ -138,7 +138,7 @@ export default function HomePage() {
                 Skill Over Wallet
               </h4>
               <p>
-                You don't need to min-max by buying expensive uniques to
+                You don&apos;t need to min-max by buying expensive uniques to
                 compete. The only thing standing between you and victory is your
                 deckbuilding skill and gameplay decisions, not your budget.
               </p>
@@ -159,9 +159,9 @@ export default function HomePage() {
               </h4>
               <p>
                 Playing against standard constructed decks? You have all the
-                advantages. Win, and you've beaten a "pay-to-win" deck with your
-                limited pool. Lose, and you've got a built-in excuse. Either
-                way, you're the underdog hero!
+                advantages. Win, and you&apos;ve beaten a &apos;pay-to-win&apos; deck with your
+                limited pool. Lose, and you&apos;ve got a built-in excuse. Either
+                way, you&apos;re the underdog hero!
               </p>
             </div>
           </div>

@@ -8,7 +8,15 @@ import {
 } from "@/lib/scanningState";
 
 const SCANNING_QUERY_KEY = ["scanning-state"];
-const MAX_BOOSTERS_PER_SET = 2; // Hard-coded limit for testing
+export const MAX_BOOSTERS_PER_SET = 2; // Hard-coded limit for testing
+
+// Active sets in the current format
+export const ACTIVE_SETS = [
+  { code: "COREKS", name: "Core Set" },
+  { code: "BTG", name: "Beyond the Gates" },
+  { code: "WFM", name: "Whispers from the Maze" },
+  { code: "TBF", name: "Trial by Frost" },
+] as const;
 
 export function useScanningState() {
   return useQuery({

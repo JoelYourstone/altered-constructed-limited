@@ -1,6 +1,6 @@
 import { beep } from "@/lib/beep";
 import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 export default function CardScanner(props: {
   onFullCardScan?: (tinyUrl: string, cardObject: any) => void;
@@ -105,49 +105,49 @@ export default function CardScanner(props: {
     </div>
   );
 }
-function drawCheckmark(
-  detectedCode: IDetectedBarcode,
-  ctx: CanvasRenderingContext2D,
-  backgroundColor: string = "#22C55E"
-) {
-  const { boundingBox } = detectedCode;
+// function drawCheckmark(
+//   detectedCode: IDetectedBarcode,
+//   ctx: CanvasRenderingContext2D,
+//   backgroundColor: string = "#22C55E"
+// ) {
+//   const { boundingBox } = detectedCode;
 
-  // Use the full bounding box size
-  const borderRadius = Math.min(boundingBox.width, boundingBox.height) * 0.1;
+//   // Use the full bounding box size
+//   const borderRadius = Math.min(boundingBox.width, boundingBox.height) * 0.1;
 
-  // Draw smooth filled checkbox with green background
-  ctx.fillStyle = backgroundColor; // Green background
-  ctx.beginPath();
-  ctx.roundRect(
-    boundingBox.x,
-    boundingBox.y,
-    boundingBox.width,
-    boundingBox.height,
-    borderRadius
-  );
-  ctx.fill();
+//   // Draw smooth filled checkbox with green background
+//   ctx.fillStyle = backgroundColor; // Green background
+//   ctx.beginPath();
+//   ctx.roundRect(
+//     boundingBox.x,
+//     boundingBox.y,
+//     boundingBox.width,
+//     boundingBox.height,
+//     borderRadius
+//   );
+//   ctx.fill();
 
-  // Draw white checkmark
-  ctx.strokeStyle = "#FFFFFF";
-  ctx.lineWidth = Math.min(boundingBox.width, boundingBox.height) * 0.08;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  ctx.beginPath();
-  // Draw checkmark path
-  ctx.moveTo(
-    boundingBox.x + boundingBox.width * 0.25,
-    boundingBox.y + boundingBox.height * 0.5
-  );
-  ctx.lineTo(
-    boundingBox.x + boundingBox.width * 0.45,
-    boundingBox.y + boundingBox.height * 0.7
-  );
-  ctx.lineTo(
-    boundingBox.x + boundingBox.width * 0.75,
-    boundingBox.y + boundingBox.height * 0.3
-  );
-  ctx.stroke();
-}
+//   // Draw white checkmark
+//   ctx.strokeStyle = "#FFFFFF";
+//   ctx.lineWidth = Math.min(boundingBox.width, boundingBox.height) * 0.08;
+//   ctx.lineCap = "round";
+//   ctx.lineJoin = "round";
+//   ctx.beginPath();
+//   // Draw checkmark path
+//   ctx.moveTo(
+//     boundingBox.x + boundingBox.width * 0.25,
+//     boundingBox.y + boundingBox.height * 0.5
+//   );
+//   ctx.lineTo(
+//     boundingBox.x + boundingBox.width * 0.45,
+//     boundingBox.y + boundingBox.height * 0.7
+//   );
+//   ctx.lineTo(
+//     boundingBox.x + boundingBox.width * 0.75,
+//     boundingBox.y + boundingBox.height * 0.3
+//   );
+//   ctx.stroke();
+// }
 
 // Cache the altered logo image
 let alteredLogoImage: HTMLImageElement | null = null;

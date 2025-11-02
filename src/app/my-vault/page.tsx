@@ -4,8 +4,6 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { getAuthState, logout } from "@/lib/auth";
-import { Scanner } from "@yudiel/react-qr-scanner";
-import CardScanner from "@/components/CardScanner";
 
 // Mock data structure for player vault
 interface SetVault {

@@ -12,17 +12,17 @@ import {
   useAddCard,
   useClearScanning,
   useRemoveFailedScan,
+  MAX_BOOSTERS_PER_SET,
+  ACTIVE_SETS,
 } from "@/hooks/useScanning";
 import { ScannedCard } from "@/lib/scanningState";
 import ThinCard from "@/components/ThinCard";
 import BoosterCardList from "@/components/BoosterCardList";
+import CompletedBoostersSection from "@/components/CompletedBoostersSection";
 
 export default function AddCardsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<{ email: string; alteredId: string } | null>(
-    null
-  );
   const processingRef = useRef<ProcessingScanAreaRef>(null);
 
   const { data: scanningState, isLoading: isLoadingState } = useScanningState();
@@ -36,7 +36,6 @@ export default function AddCardsPage() {
       router.push("/login");
       return;
     }
-    setUser(authState.user);
     setLoading(false);
   }, [router]);
 
@@ -109,9 +108,7 @@ export default function AddCardsPage() {
   }
 
   const activeBoosters = scanningState ? scanningState.activeBoosters : [];
-  const completedBoostersArray = scanningState
-    ? Object.entries(scanningState.completedBoosters)
-    : [];
+  const completedBoosters = scanningState ? scanningState.completedBoosters : {};
   const failedScans = scanningState ? scanningState.failedScans : [];
 
   return (
@@ -133,7 +130,7 @@ export default function AddCardsPage() {
               display: "inline",
             }}
           >
-            Scan your cards
+            Scan cards to add to your vault
           </p>
         </div>
       </div>
@@ -145,7 +142,7 @@ export default function AddCardsPage() {
         {/* Active Boosters Progress */}
         {activeBoosters.length > 0 && (
           <div className="mb-6 space-y-3">
-            {activeBoosters.map((setBooster, index) => {
+            {activeBoosters.map((setBooster) => {
               const totalProgress =
                 setBooster.progress.hero +
                 setBooster.progress.common +
@@ -227,54 +224,17 @@ export default function AddCardsPage() {
         )}
 
         {/* Completed Boosters */}
-        {completedBoostersArray.length > 0 && (
-          <div className="mb-6 space-y-2">
-            <h2 className="font-semibold text-sm text-foreground/70">
-              Completed Boosters
-            </h2>
-            {completedBoostersArray.map(([setCode, boosterData]) => (
-              <div key={setCode} className="space-y-2">
-                {boosterData.cards && boosterData.cards.length > 0 ? (
-                  // Show individual boosters with their cards
-                  boosterData.cards.map((cards, boosterIndex) => {
-                    const showBoosterNumber = boosterData.cards.length > 1;
-                    
-                    return (
-                      <div
-                        key={`${setCode}-${boosterIndex}`}
-                        className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
-                      >
-                        <p className="text-green-600 dark:text-green-400 font-medium">
-                          ✓ {boosterData.setName} Booster
-                          {showBoosterNumber && ` #${boosterIndex + 1}`}
-                        </p>
-                        
-                        {/* Show/Hide Cards */}
-                        <BoosterCardList cards={cards} variant="completed" />
-                      </div>
-                    );
-                  })
-                ) : (
-                  // Fallback for old format without cards
-                  <div
-                    className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
-                  >
-                    <p className="text-green-600 dark:text-green-400 font-medium">
-                      ✓ {boosterData.count}x {boosterData.setName} Booster
-                      {boosterData.count > 1 ? "s" : ""}
-                    </p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <CompletedBoostersSection 
+          completedBoosters={completedBoosters}
+          maxBoostersPerSet={MAX_BOOSTERS_PER_SET}
+          activeSets={ACTIVE_SETS}
+        />
 
         {/* Failed Scans */}
         {failedScans.length > 0 && (
           <div className="mb-6 space-y-2">
             <h2 className="font-semibold text-sm text-red-500/70">
-              You have reached the booster limit for this set. <br />These cards couldn't be added.
+              You have reached the set limit for these cards. <br />These cards are NOT part of your vault.
             </h2>
             <div className="space-y-1">
               {failedScans.map((failedScan) => (
@@ -282,16 +242,15 @@ export default function AddCardsPage() {
               ))}
             </div>
             
-            {/* Info message */}
-            <p className="text-xs text-foreground/50 mt-2">
-              These cards couldn't be added (booster limit reached)
-            </p>
+            <button onClick={() => failedScans.forEach((failedScan) => removeFailedScanMutation.mutate(failedScan.timestamp))} type="button" className="w-full rounded-lg border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-colors py-3 font-medium disabled:opacity-50 mt-4">
+              OK, I have sorted them out, clear list.
+            </button>
           </div>
         )}
 
         {/* Clear All Button */}
-        {true &&
-          (activeBoosters.length > 0 || completedBoostersArray.length > 0) && (
+        {process.env.NODE_ENV === "development" &&
+          (activeBoosters.length > 0 || Object.keys(completedBoosters).length > 0) && (
             <div className="mt-8 pt-6 border-t border-black/[.08] dark:border-white/[.145]">
               <button
                 onClick={handleClearAll}
@@ -302,9 +261,6 @@ export default function AddCardsPage() {
                   ? "Clearing..."
                   : "Clear All Data"}
               </button>
-              <p className="text-xs text-foreground/60 text-center mt-2">
-                This will remove all scanned cards and completed boosters
-              </p>
             </div>
           )}
       </main>

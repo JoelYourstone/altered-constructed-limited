@@ -114,9 +114,9 @@ export default function PlayerVaultPage() {
 
         {/* Player Info */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">{player.alteredId}'s Vault</h1>
+          <h1 className="text-3xl font-bold mb-2">{player.alteredId}&apos;s Vault</h1>
           <p className="text-foreground/70">
-            Viewing {player.alteredId}'s card vault
+            Viewing {player.alteredId}&apos;s card vault
           </p>
         </div>
 
