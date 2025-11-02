@@ -33,26 +33,16 @@ export interface AddCardRequest {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
-    if (!session?.user?.alteredId) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.alteredId;
-    const body = await request.json() as AddCardRequest;
+    const userId = session.user.email;
+    const body = (await request.json()) as AddCardRequest;
     const { uniqueToken, reference, cardData } = body;
 
-    const { env } = getCloudflareContext<CloudflareEnv>();
-    
-    if (!env.DB) {
-      return NextResponse.json(
-        { error: "Database not configured" },
-        { status: 500 }
-      );
-    }
+    const { env } = getCloudflareContext();
 
     // Check if card already scanned
     const existingCard = await env.DB.prepare(
@@ -77,7 +67,9 @@ export async function POST(request: NextRequest) {
 
     if (!seasonSetsResult) {
       return NextResponse.json(
-        { error: `Set ${cardData.cardSet.code} is not active in the current season` },
+        {
+          error: `Set ${cardData.cardSet.code} is not active in the current season`,
+        },
         { status: 400 }
       );
     }
@@ -118,33 +110,33 @@ export async function POST(request: NextRequest) {
         .all<{ card_data: string }>();
 
       const cards = cardsResult.results || [];
-      
+
       let heroCount = 0;
       let commonCount = 0;
       let rareCount = 0;
       let uniqueCount = 0;
 
-      cards.forEach(card => {
+      cards.forEach((card) => {
         const data = JSON.parse(card.card_data);
-        if (data.cardType === 'HERO') heroCount++;
-        else if (data.rarity === 'COMMON') commonCount++;
-        else if (data.rarity === 'RARE') rareCount++;
-        else if (data.rarity === 'UNIQUE') uniqueCount++;
+        if (data.cardType === "HERO") heroCount++;
+        else if (data.rarity === "COMMON") commonCount++;
+        else if (data.rarity === "RARE") rareCount++;
+        else if (data.rarity === "UNIQUE") uniqueCount++;
       });
 
-      if (cardData.cardType === 'HERO') {
+      if (cardData.cardType === "HERO") {
         return heroCount < 1;
-      } else if (cardData.rarity === 'COMMON') {
+      } else if (cardData.rarity === "COMMON") {
         return commonCount < 8;
-      } else if (cardData.rarity === 'RARE' || cardData.rarity === 'UNIQUE') {
-        return (rareCount + uniqueCount) < 3;
+      } else if (cardData.rarity === "RARE" || cardData.rarity === "UNIQUE") {
+        return rareCount + uniqueCount < 3;
       }
       return false;
     };
 
     // Find a booster that can fit this card
     let targetBoosterId: number | null = null;
-    
+
     for (const booster of activeBoosters) {
       if (await canFitCard(booster.id)) {
         targetBoosterId = booster.id;
@@ -156,9 +148,9 @@ export async function POST(request: NextRequest) {
     if (!targetBoosterId) {
       if (totalBoosters >= maxPacksForSet) {
         return NextResponse.json(
-          { 
+          {
             error: `Maximum ${maxPacksForSet} boosters per set limit reached`,
-            limitReached: true 
+            limitReached: true,
           },
           { status: 400 }
         );
@@ -183,6 +175,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const alteredCardData = await fetch(
+      `https://api.altered.gg/cards/${reference}?locale=en-us`
+    ).then((res) => res.json());
+
     // Upsert card metadata
     await env.DB.prepare(
       `INSERT INTO cards_metadata (reference, card_data, updated_at) 
@@ -191,7 +187,7 @@ export async function POST(request: NextRequest) {
          card_data = excluded.card_data,
          updated_at = CURRENT_TIMESTAMP`
     )
-      .bind(reference, JSON.stringify(cardData))
+      .bind(reference, JSON.stringify(alteredCardData))
       .run();
 
     // Insert the card
@@ -240,4 +236,3 @@ export async function POST(request: NextRequest) {
     );
   }
 }
-

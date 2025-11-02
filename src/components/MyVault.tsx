@@ -15,12 +15,8 @@ interface SetVault {
 
 export function MyVault() {
   const { data: vault, isLoading, error } = useVaultState();
-
   console.log("vault", vault);
-  console.log("isLoading", isLoading);
-  console.log("error", error);
 
-  // Mock player vault data
   const playerVault: SetVault[] =
     vault?.activeBoosters.map((booster) => ({
       setName: booster.set_name,

@@ -31,6 +31,7 @@ async function fetchVaultState(): Promise<VaultState> {
  * Add a card to the vault
  */
 async function addCardToVault(card: AddCardRequest): Promise<void> {
+  console.log("Adding card to vault", card);
   const response = await fetch("/api/vault/add-card", {
     method: "POST",
     headers: {
