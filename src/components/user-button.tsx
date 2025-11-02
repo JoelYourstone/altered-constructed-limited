@@ -8,12 +8,12 @@ export default async function UserButton() {
     <div className="flex items-center gap-2">
       <SignOut />
       <span className="hidden text-sm sm:inline-flex whitespace-nowrap">
-        {session.user.name}
+        {session.user?.name}
       </span>
       {session.user.image && (
         <img
           src={session.user.image}
-          alt={session.user.name}
+          alt={session.user?.name || "User avatar"}
           width={32}
           height={32}
         />
