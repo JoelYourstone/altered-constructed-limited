@@ -1,50 +1,66 @@
+import { beep } from "@/lib/beep";
 import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
 import { useRef, useState } from "react";
 
 export default function CardScanner(props: {
-  onScan?: (uniqueToken: string, cardObject: any) => void;
+  onFullCardScan?: (tinyUrl: string, cardObject: any) => void;
+  onTinyUrlScan?: (tinyUrl: string) => void;
+  onFailedScan?: (tinyUrl: string | null, error: string) => void;
 }) {
-  const [latestScannedCard, setLatestScannedCard] = useState<string | null>(
-    null
-  );
-  const latestScannedTokenRef = useRef<string | null>(null);
-  const scannedTokensRef = useRef<Set<string>>(new Set());
+  const latestScannedTinyUrl = useRef<string | null>(null);
+  const scannedTinyUrls = useRef<Map<string, number>>(new Map());
+
+  console.log("re-render");
 
   async function handleScan(detectedCodes: IDetectedBarcode[]) {
-    const detectedValues = detectedCodes.map((s) => s.rawValue);
+    let detectedValues = detectedCodes.map((s) => s.rawValue);
 
-    for (const code of detectedValues) {
-      const token = getTokenFromScanOrNull(code);
-      if (!token) {
+    detectedValues = detectedValues
+      .map((s) => getTinyUrlFromScanOrNull(s))
+      .filter((s) => Boolean(s)) as string[];
+
+    for (const tinyUrl of detectedValues) {
+      // Check if card was scanned within the last 5 seconds
+      const lastScanTime = scannedTinyUrls.current.get(tinyUrl);
+      const now = Date.now();
+      if (lastScanTime && now - lastScanTime < 5000) {
+        console.log("Card scanned too recently, skipping");
         continue;
       }
-      if (scannedTokensRef.current.has(token)) {
+
+      if (latestScannedTinyUrl.current !== tinyUrl) {
+        beep();
+      }
+      props.onTinyUrlScan?.(tinyUrl);
+      latestScannedTinyUrl.current = tinyUrl;
+
+      if (scannedTinyUrls.current.has(tinyUrl)) {
+        props.onFailedScan?.(tinyUrl, "Card already scanned");
         continue;
       }
-      scannedTokensRef.current.add(token);
+      scannedTinyUrls.current.set(tinyUrl, now);
+
       try {
-        const cardGuidResponse = await fetch(`/api/card-scan?code=${token}`, {
+        const cardGuidResponse = await fetch(`/api/card-scan?code=${tinyUrl}`, {
           method: "GET",
         });
         if (!cardGuidResponse.ok) {
+          props.onFailedScan?.(tinyUrl, "Failed to fetch card data");
           continue;
         }
         const cardObject = (await cardGuidResponse.json()) as {
           card: { imagePath: string };
         };
-        const { imagePath } = cardObject.card;
 
-        latestScannedTokenRef.current = token;
-        props.onScan?.(token, cardObject);
-        setLatestScannedCard(imagePath);
+        props.onFullCardScan?.(tinyUrl, cardObject);
       } catch (error) {
-        alert(`Error scanning card: ${error}`);
+        props.onFailedScan?.(tinyUrl, `Error scanning card: ${error}`);
       }
     }
   }
 
-  function getTokenFromScanOrNull(code: string) {
-    const decoded = decodeURIComponent(code);
+  function getTinyUrlFromScanOrNull(code: string) {
+    const decoded = decodeURIComponent(code).trim();
     if (!decoded.startsWith("https://qr.altered.gg/")) {
       return null;
     }
@@ -60,18 +76,7 @@ export default function CardScanner(props: {
     ctx: CanvasRenderingContext2D
   ) {
     detectedCodes.forEach((detectedCode) => {
-      const token = getTokenFromScanOrNull(detectedCode.rawValue);
-
-      if (
-        token &&
-        scannedTokensRef.current.has(token) &&
-        latestScannedTokenRef.current !== token
-      ) {
-        drawCheckmark(detectedCode, ctx, "#F59E0B");
-        return;
-      }
-
-      drawCheckmark(detectedCode, ctx);
+      drawAlteredLogo(detectedCode, ctx);
     });
   }
 
@@ -79,6 +84,7 @@ export default function CardScanner(props: {
     <div>
       <Scanner
         allowMultiple
+        formats={["qr_code", "rm_qr_code"]}
         components={{
           tracker: highlightCodeOnCanvas,
         }}
@@ -141,4 +147,57 @@ function drawCheckmark(
     boundingBox.y + boundingBox.height * 0.3
   );
   ctx.stroke();
+}
+
+// Cache the altered logo image
+let alteredLogoImage: HTMLImageElement | null = null;
+let alteredLogoImageLoading = false;
+
+function drawAlteredLogo(
+  detectedCode: IDetectedBarcode,
+  ctx: CanvasRenderingContext2D
+) {
+  const { boundingBox } = detectedCode;
+
+  // Adjust this scale to make the image bigger or smaller
+  // 1.0 = fill the bounding box, >1.0 = larger, <1.0 = smaller
+  const imageScale = 1.4;
+
+  // Use the full bounding box size
+  const borderRadius = Math.min(boundingBox.width, boundingBox.height) * 0.1;
+
+  // Draw smooth filled background
+  ctx.beginPath();
+  ctx.roundRect(
+    boundingBox.x,
+    boundingBox.y,
+    boundingBox.width,
+    boundingBox.height,
+    borderRadius
+  );
+
+  // Load the altered.png image if not already loaded
+  if (!alteredLogoImage && !alteredLogoImageLoading) {
+    alteredLogoImageLoading = true;
+    const img = new Image();
+    img.src = "/altered.png";
+    img.onload = () => {
+      alteredLogoImage = img;
+      alteredLogoImageLoading = false;
+    };
+    img.onerror = () => {
+      alteredLogoImageLoading = false;
+    };
+  }
+
+  // Draw the image if it's loaded
+  if (alteredLogoImage) {
+    const imageWidth = boundingBox.width * imageScale;
+    const imageHeight = boundingBox.height * imageScale;
+    // Center the scaled image
+    const imageX = boundingBox.x + (boundingBox.width - imageWidth) / 2;
+    const imageY = boundingBox.y + (boundingBox.height - imageHeight) / 2;
+
+    ctx.drawImage(alteredLogoImage, imageX, imageY, imageWidth, imageHeight);
+  }
 }

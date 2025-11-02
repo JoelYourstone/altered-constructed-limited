@@ -23,6 +23,8 @@ export async function GET(request: NextRequest) {
     );
 
     if (!cardGuidResponse.ok) {
+      console.error("Failed to fetch card GUID:", cardGuidResponse.statusText);
+      console.log(await cardGuidResponse.text());
       return NextResponse.json(
         { error: "Failed to fetch card GUID" },
         { status: cardGuidResponse.status }
