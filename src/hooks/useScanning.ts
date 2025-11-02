@@ -8,7 +8,7 @@ import {
 } from "@/lib/scanningState";
 
 const SCANNING_QUERY_KEY = ["scanning-state"];
-const MAX_BOOSTERS_PER_SET = 0; // Hard-coded limit for testing
+const MAX_BOOSTERS_PER_SET = 2; // Hard-coded limit for testing
 
 export function useScanningState() {
   return useQuery({
@@ -164,6 +164,9 @@ export function useAddCard() {
           [setCode]: {
             count: existingCompleted ? existingCompleted.count + 1 : 1,
             setName: card.cardSet.name,
+            cards: existingCompleted 
+              ? [...existingCompleted.cards, updatedBooster.cards]
+              : [updatedBooster.cards],
           },
         };
 

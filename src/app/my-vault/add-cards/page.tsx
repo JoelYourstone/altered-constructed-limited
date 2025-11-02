@@ -15,6 +15,7 @@ import {
 } from "@/hooks/useScanning";
 import { ScannedCard } from "@/lib/scanningState";
 import ThinCard from "@/components/ThinCard";
+import BoosterCardList from "@/components/BoosterCardList";
 
 export default function AddCardsPage() {
   const router = useRouter();
@@ -189,7 +190,7 @@ export default function AddCardsPage() {
                   </div>
 
                   {/* Compact Progress */}
-                  <div className="grid grid-cols-4 gap-2 text-center text-sm">
+                  <div className="grid grid-cols-4 gap-2 text-center text-sm mb-2">
                     <div>
                       <div className="font-bold">
                         {setBooster.progress.hero}/1
@@ -216,6 +217,9 @@ export default function AddCardsPage() {
                       <div className="text-xs text-foreground/60">Unique</div>
                     </div>
                   </div>
+
+                  {/* Show/Hide Cards */}
+                  <BoosterCardList cards={setBooster.cards} variant="active" />
                 </div>
               );
             })}
@@ -229,14 +233,38 @@ export default function AddCardsPage() {
               Completed Boosters
             </h2>
             {completedBoostersArray.map(([setCode, boosterData]) => (
-              <div
-                key={setCode}
-                className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
-              >
-                <p className="text-green-600 dark:text-green-400 font-medium">
-                  ✓ {boosterData.count}x {boosterData.setName} Booster
-                  {boosterData.count > 1 ? "s" : ""}
-                </p>
+              <div key={setCode} className="space-y-2">
+                {boosterData.cards && boosterData.cards.length > 0 ? (
+                  // Show individual boosters with their cards
+                  boosterData.cards.map((cards, boosterIndex) => {
+                    const showBoosterNumber = boosterData.cards.length > 1;
+                    
+                    return (
+                      <div
+                        key={`${setCode}-${boosterIndex}`}
+                        className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
+                      >
+                        <p className="text-green-600 dark:text-green-400 font-medium">
+                          ✓ {boosterData.setName} Booster
+                          {showBoosterNumber && ` #${boosterIndex + 1}`}
+                        </p>
+                        
+                        {/* Show/Hide Cards */}
+                        <BoosterCardList cards={cards} variant="completed" />
+                      </div>
+                    );
+                  })
+                ) : (
+                  // Fallback for old format without cards
+                  <div
+                    className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg"
+                  >
+                    <p className="text-green-600 dark:text-green-400 font-medium">
+                      ✓ {boosterData.count}x {boosterData.setName} Booster
+                      {boosterData.count > 1 ? "s" : ""}
+                    </p>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -245,7 +273,7 @@ export default function AddCardsPage() {
         {/* Failed Scans */}
         {failedScans.length > 0 && (
           <div className="mb-6 space-y-2">
-            <h2 className="font-semibold text-sm text-foreground/70">
+            <h2 className="font-semibold text-sm text-red-500/70">
               You have reached the booster limit for this set. <br />These cards couldn't be added.
             </h2>
             <div className="space-y-1">

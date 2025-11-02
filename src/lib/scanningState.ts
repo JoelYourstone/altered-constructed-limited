@@ -44,9 +44,15 @@ export interface FailedScan {
   timestamp: number;
 }
 
+export interface CompletedBooster {
+  count: number;
+  setName: string;
+  cards: ScannedCard[][]; // Array of card arrays, one for each completed booster
+}
+
 export interface ScanningState {
   activeBoosters: SetBoosterProgress[]; // Array of all active boosters
-  completedBoosters: Record<string, { count: number; setName: string }>;
+  completedBoosters: Record<string, CompletedBooster>;
   failedScans: FailedScan[];
 }
 
@@ -70,13 +76,34 @@ export function getScanningState(): ScanningState {
         needsMigration = true;
       }
       
+      // Migrate completedBoosters to include cards array
+      if (state.completedBoosters) {
+        const migratedCompleted: Record<string, any> = {};
+        for (const [setCode, boosterData] of Object.entries(state.completedBoosters)) {
+          if (!boosterData || typeof boosterData !== 'object') continue;
+          const data = boosterData as any;
+          if (!data.cards) {
+            // Old format - add empty cards array
+            migratedCompleted[setCode] = {
+              count: data.count,
+              setName: data.setName,
+              cards: [],
+            };
+            needsMigration = true;
+          } else {
+            migratedCompleted[setCode] = data;
+          }
+        }
+        state.completedBoosters = migratedCompleted;
+      }
+      
       // Handle migration from old object-based format to new array format
       if (parsed.activeBoosters && !Array.isArray(parsed.activeBoosters)) {
         const boosters = Object.values(parsed.activeBoosters).map((b: any, index: number) => ({
           ...b,
           boosterId: b.boosterId || `${b.setCode}_migrated_${index}`,
         }));
-        state = { ...parsed, activeBoosters: boosters, failedScans: state.failedScans };
+        state = { ...parsed, activeBoosters: boosters, failedScans: state.failedScans, completedBoosters: state.completedBoosters };
         needsMigration = true;
       }
       
