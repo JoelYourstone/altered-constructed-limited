@@ -8,6 +8,7 @@ import {
 } from "@/lib/scanningState";
 
 const SCANNING_QUERY_KEY = ["scanning-state"];
+const MAX_BOOSTERS_PER_SET = 0; // Hard-coded limit for testing
 
 export function useScanningState() {
   return useQuery({
@@ -56,8 +57,31 @@ export function useAddCard() {
 
       const isNewBooster = !targetBooster;
 
-      // If no booster has room, create a new one
+      // If no booster has room, check if we can create a new one
       if (!targetBooster) {
+        const boostersForThisSet = currentState.activeBoosters.filter(
+          (b) => b.setCode === setCode
+        );
+        
+        // Check if we've hit the limit for this set
+        if (boostersForThisSet.length >= MAX_BOOSTERS_PER_SET) {
+          console.log(`Cannot create new booster for ${setCode}: limit of ${MAX_BOOSTERS_PER_SET} reached`);
+          // Add to failed scans
+          const newState: ScanningState = {
+            ...currentState,
+            failedScans: [
+              ...currentState.failedScans,
+              {
+                card,
+                reason: `Maximum ${MAX_BOOSTERS_PER_SET} boosters per set limit reached`,
+                timestamp: Date.now(),
+              },
+            ],
+          };
+          saveScanningState(newState);
+          return newState;
+        }
+        
         console.log(
           `Creating new booster for ${setCode}, card type: ${card.cardType}, rarity: ${card.rarity}`
         );
@@ -166,9 +190,31 @@ export function useClearScanning() {
       const emptyState: ScanningState = {
         activeBoosters: [],
         completedBoosters: {},
+        failedScans: [],
       };
       saveScanningState(emptyState);
       return emptyState;
+    },
+    onSuccess: (newState) => {
+      queryClient.setQueryData(SCANNING_QUERY_KEY, newState);
+    },
+  });
+}
+
+export function useRemoveFailedScan() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (timestamp: number) => {
+      const currentState = getScanningState();
+      const newState: ScanningState = {
+        ...currentState,
+        failedScans: currentState.failedScans.filter(
+          (f) => f.timestamp !== timestamp
+        ),
+      };
+      saveScanningState(newState);
+      return newState;
     },
     onSuccess: (newState) => {
       queryClient.setQueryData(SCANNING_QUERY_KEY, newState);

@@ -1,16 +1,26 @@
 // Persistence layer for scanning state using localStorage
 
+export interface Faction {
+  reference: string;
+  color: string;
+  id: string;
+  name: string;
+}
+
 export interface ScannedCard {
   uniqueToken: string; // Physical card identifier
   reference: string;
   name: string;
   rarity: string;
   cardType: string;
+  cardTypeString: string;
+  cardSubtypeString?: string;
   cardSet: {
     code: string;
     name: string;
   };
   imagePath?: string;
+  faction?: Faction;
 }
 
 export interface BoosterProgress {
@@ -28,16 +38,23 @@ export interface SetBoosterProgress {
   boosterId: string; // Unique identifier for this specific booster
 }
 
+export interface FailedScan {
+  card: ScannedCard;
+  reason: string;
+  timestamp: number;
+}
+
 export interface ScanningState {
   activeBoosters: SetBoosterProgress[]; // Array of all active boosters
   completedBoosters: Record<string, { count: number; setName: string }>;
+  failedScans: FailedScan[];
 }
 
 const SCANNING_STATE_KEY = "vault_scanning_state";
 
 export function getScanningState(): ScanningState {
   if (typeof window === "undefined") {
-    return { activeBoosters: [], completedBoosters: {} };
+    return { activeBoosters: [], completedBoosters: {}, failedScans: [] };
   }
 
   const stored = localStorage.getItem(SCANNING_STATE_KEY);
@@ -47,13 +64,19 @@ export function getScanningState(): ScanningState {
       let needsMigration = false;
       let state = parsed;
       
+      // Ensure failedScans exists
+      if (!state.failedScans) {
+        state.failedScans = [];
+        needsMigration = true;
+      }
+      
       // Handle migration from old object-based format to new array format
       if (parsed.activeBoosters && !Array.isArray(parsed.activeBoosters)) {
         const boosters = Object.values(parsed.activeBoosters).map((b: any, index: number) => ({
           ...b,
           boosterId: b.boosterId || `${b.setCode}_migrated_${index}`,
         }));
-        state = { ...parsed, activeBoosters: boosters };
+        state = { ...parsed, activeBoosters: boosters, failedScans: state.failedScans };
         needsMigration = true;
       }
       
@@ -80,11 +103,11 @@ export function getScanningState(): ScanningState {
       
       return state;
     } catch {
-      return { activeBoosters: [], completedBoosters: {} };
+      return { activeBoosters: [], completedBoosters: {}, failedScans: [] };
     }
   }
 
-  return { activeBoosters: [], completedBoosters: {} };
+  return { activeBoosters: [], completedBoosters: {}, failedScans: [] };
 }
 
 export function saveScanningState(state: ScanningState): void {

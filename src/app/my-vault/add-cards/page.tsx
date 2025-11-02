@@ -11,8 +11,10 @@ import {
   useScanningState,
   useAddCard,
   useClearScanning,
+  useRemoveFailedScan,
 } from "@/hooks/useScanning";
 import { ScannedCard } from "@/lib/scanningState";
+import ThinCard from "@/components/ThinCard";
 
 export default function AddCardsPage() {
   const router = useRouter();
@@ -25,6 +27,7 @@ export default function AddCardsPage() {
   const { data: scanningState, isLoading: isLoadingState } = useScanningState();
   const addCardMutation = useAddCard();
   const clearScanningMutation = useClearScanning();
+  const removeFailedScanMutation = useRemoveFailedScan();
 
   useEffect(() => {
     const authState = getAuthState();
@@ -49,7 +52,7 @@ export default function AddCardsPage() {
   async function handleFullCardScan(tinyUrl: string, cardObject: any) {
     try {
       const response = await fetch(
-        `https://api.altered.gg/public/cards/${cardObject.card.reference}?locale=en`
+        `https://api.altered.gg/public/cards/${cardObject.card.reference}?locale=en-us`
       );
       const data = (await response.json()) as any;
 
@@ -59,12 +62,17 @@ export default function AddCardsPage() {
         name: data.name,
         rarity: data.rarity.reference,
         cardType: data.cardType.reference,
+        cardTypeString: data.cardType.name,
+        cardSubtypeString: data.cardSubTypes?.[0]?.name,
         cardSet: {
           code: data.cardSet.code,
-          name: data.cardSet.name,
+          name: data.cardSet.name
         },
-        imagePath: data.assets?.WEB?.[0],
+        faction: data.mainFaction,
+        imagePath: data?.imagePath,
       };
+
+      console.log(data);
 
       // Add card using TanStack Query mutation
       addCardMutation.mutate(card, {
@@ -103,6 +111,7 @@ export default function AddCardsPage() {
   const completedBoostersArray = scanningState
     ? Object.entries(scanningState.completedBoosters)
     : [];
+  const failedScans = scanningState ? scanningState.failedScans : [];
 
   return (
     <div className="min-h-screen bg-background">
@@ -230,6 +239,25 @@ export default function AddCardsPage() {
                 </p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Failed Scans */}
+        {failedScans.length > 0 && (
+          <div className="mb-6 space-y-2">
+            <h2 className="font-semibold text-sm text-foreground/70">
+              You have reached the booster limit for this set. <br />These cards couldn't be added.
+            </h2>
+            <div className="space-y-1">
+              {failedScans.map((failedScan) => (
+                <ThinCard key={failedScan.timestamp} card={failedScan.card} />
+              ))}
+            </div>
+            
+            {/* Info message */}
+            <p className="text-xs text-foreground/50 mt-2">
+              These cards couldn't be added (booster limit reached)
+            </p>
           </div>
         )}
 
