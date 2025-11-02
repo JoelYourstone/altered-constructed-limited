@@ -6,17 +6,9 @@ import {
   ScanningState,
   SetBoosterProgress,
 } from "@/lib/scanningState";
+import { useSeasonSets } from "./useSeasonSets";
 
 const SCANNING_QUERY_KEY = ["scanning-state"];
-export const MAX_BOOSTERS_PER_SET = 2; // Hard-coded limit for testing
-
-// Active sets in the current format
-export const ACTIVE_SETS = [
-  { code: "COREKS", name: "Core Set" },
-  { code: "BTG", name: "Beyond the Gates" },
-  { code: "WFM", name: "Whispers from the Maze" },
-  { code: "TBF", name: "Trial by Frost" },
-] as const;
 
 export function useScanningState() {
   return useQuery({
@@ -27,24 +19,51 @@ export function useScanningState() {
 
 export function useAddCard() {
   const queryClient = useQueryClient();
+  const { data: seasonSets } = useSeasonSets();
 
   return useMutation({
     mutationFn: async (card: ScannedCard) => {
       const currentState = getScanningState();
 
+      if (!seasonSets) {
+        console.log("No season sets found");
+        alert("No season sets found");
+        throw new Error("No season sets found");
+      }
+
       // Check if this physical card (uniqueToken) has already been scanned
       const allCards = currentState.activeBoosters.flatMap((b) => b.cards);
-
       const isDuplicate = allCards.some(
         (c) => c.uniqueToken === card.uniqueToken
       );
-
       if (isDuplicate) {
         console.log("Duplicate card detected:", card.uniqueToken);
         return currentState;
       }
 
       const setCode = card.cardSet.code;
+
+      // Find the max packs allowed for this set from the database
+      const seasonSet = seasonSets.find((s) => s.set_code === setCode);
+
+      if (!seasonSet) {
+        console.log(`Set ${setCode} is not an active season set`);
+        const newState: ScanningState = {
+          ...currentState,
+          failedScans: [
+            ...currentState.failedScans,
+            {
+              card,
+              reason: `Set ${setCode} is not active in the current season`,
+              timestamp: Date.now(),
+            },
+          ],
+        };
+        saveScanningState(newState);
+        return newState;
+      }
+
+      const maxPacksForSet = seasonSet.max_packs;
 
       // Helper function to check if a card can fit in a booster
       const canFitCard = (booster: SetBoosterProgress): boolean => {
@@ -70,10 +89,12 @@ export function useAddCard() {
         const boostersForThisSet = currentState.activeBoosters.filter(
           (b) => b.setCode === setCode
         );
-        
+
         // Check if we've hit the limit for this set
-        if (boostersForThisSet.length >= MAX_BOOSTERS_PER_SET) {
-          console.log(`Cannot create new booster for ${setCode}: limit of ${MAX_BOOSTERS_PER_SET} reached`);
+        if (boostersForThisSet.length >= maxPacksForSet) {
+          console.log(
+            `Cannot create new booster for ${setCode}: limit of ${maxPacksForSet} reached`
+          );
           // Add to failed scans
           const newState: ScanningState = {
             ...currentState,
@@ -81,7 +102,7 @@ export function useAddCard() {
               ...currentState.failedScans,
               {
                 card,
-                reason: `Maximum ${MAX_BOOSTERS_PER_SET} boosters per set limit reached`,
+                reason: `Maximum ${maxPacksForSet} boosters per set limit reached`,
                 timestamp: Date.now(),
               },
             ],
@@ -89,7 +110,7 @@ export function useAddCard() {
           saveScanningState(newState);
           return newState;
         }
-        
+
         console.log(
           `Creating new booster for ${setCode}, card type: ${card.cardType}, rarity: ${card.rarity}`
         );
@@ -172,7 +193,7 @@ export function useAddCard() {
           [setCode]: {
             count: existingCompleted ? existingCompleted.count + 1 : 1,
             setName: card.cardSet.name,
-            cards: existingCompleted 
+            cards: existingCompleted
               ? [...existingCompleted.cards, updatedBooster.cards]
               : [updatedBooster.cards],
           },

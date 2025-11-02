@@ -10,8 +10,6 @@ import {
   useAddCard,
   useClearScanning,
   useRemoveFailedScan,
-  MAX_BOOSTERS_PER_SET,
-  ACTIVE_SETS,
 } from "@/hooks/useScanning";
 import { ScannedCard } from "@/lib/scanningState";
 import ThinCard from "@/components/ThinCard";
@@ -205,11 +203,7 @@ export default function AddCardsPage() {
         )}
 
         {/* Completed Boosters */}
-        <CompletedBoostersSection
-          completedBoosters={completedBoosters}
-          maxBoostersPerSet={MAX_BOOSTERS_PER_SET}
-          activeSets={ACTIVE_SETS}
-        />
+        <CompletedBoostersSection completedBoosters={completedBoosters} />
 
         {/* Failed Scans */}
         {failedScans.length > 0 && (

@@ -2,14 +2,29 @@ import { auth } from "@/auth";
 import Header from "@/components/Header";
 import Link from "next/link";
 import { SignIn } from "@/components/auth-components";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
+import { SeasonSet } from "./api/season-sets/route";
 
 export default async function HomePage() {
   const session = await auth();
-  console.log(session);
+  const { env } = getCloudflareContext();
+
+  const result = await env.DB.prepare(
+    "SELECT * FROM season_sets WHERE is_active = ?"
+  )
+    .bind(true)
+    .all<SeasonSet>();
+  if (!result.success) {
+    console.error("Failed to fetch season sets:", result.error);
+    throw new Error("Failed to fetch season sets");
+  }
+
+  const seasonSets = result.results;
+
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <Header variant="simple" session={session} />
+      <Header session={session} />
 
       {/* Hero Section */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
@@ -25,26 +40,21 @@ export default async function HomePage() {
         {/* Active Sets */}
         <div className="mb-8">
           <h3 className="text-2xl font-semibold mb-4">
-            Current Season (22 packs in total)
+            Current Season (
+            {seasonSets.reduce((acc, set) => acc + set.max_packs, 0)} packs in
+            total)
           </h3>
           <div className="grid sm:grid-cols-3 gap-4">
-            <div className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6">
-              <h4 className="text-lg font-semibold mb-2">
-                Whispers from the Maze
-              </h4>
-              <p className="text-sm text-foreground/60">Booster Limit</p>
-              <p className="text-2xl font-bold">10</p>
-            </div>
-            <div className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6">
-              <h4 className="text-lg font-semibold mb-2">Skybound Odyssey</h4>
-              <p className="text-sm text-foreground/60">Booster Limit</p>
-              <p className="text-2xl font-bold">12</p>
-            </div>
-            {/* <div className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6">
-              <h4 className="text-lg font-semibold mb-2">Ashes of Ahala</h4>
-              <p className="text-sm text-foreground/60">Booster Limit</p>
-              <p className="text-2xl font-bold">12</p>
-            </div> */}
+            {seasonSets.map((set) => (
+              <div
+                key={set.id}
+                className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6"
+              >
+                <h4 className="text-lg font-semibold mb-2">{set.set_name}</h4>
+                <p className="text-sm text-foreground/60">Booster Limit</p>
+                <p className="text-2xl font-bold">{set.max_packs}</p>
+              </div>
+            ))}
           </div>
         </div>
 

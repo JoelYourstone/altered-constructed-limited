@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { CompletedBooster } from "@/lib/scanningState";
 import BoosterCardList from "./BoosterCardList";
+import { useSeasonSets } from "@/hooks/useSeasonSets";
 
 interface ActiveSet {
   code: string;
@@ -9,36 +10,42 @@ interface ActiveSet {
 
 interface CompletedBoostersSectionProps {
   completedBoosters: Record<string, CompletedBooster>;
-  maxBoostersPerSet: number;
-  activeSets: readonly ActiveSet[];
 }
 
 export default function CompletedBoostersSection({
   completedBoosters,
-  maxBoostersPerSet,
-  activeSets,
 }: CompletedBoostersSectionProps) {
   const [showAllBoosters, setShowAllBoosters] = useState(false);
 
+  const { data: seasonSets } = useSeasonSets();
+
+  if (!seasonSets) {
+    return null;
+  }
+
   // Create a set of active set codes for quick lookup
-  const activeSetCodes = new Set(activeSets.map((s) => s.code));
+  const activeSetCodes = new Set(seasonSets.map((s) => s.set_code));
 
   // First, collect all scanned sets with their data
-  const scannedSetsData = Object.entries(completedBoosters).map(([setCode, boosterData]) => ({
-    setCode,
-    setName: boosterData.setName,
-    count: boosterData.count,
-    cards: boosterData.cards,
-    isActive: activeSetCodes.has(setCode), // Check if this set is in active sets
-  }));
+  const scannedSetsData = Object.entries(completedBoosters).map(
+    ([setCode, boosterData]) => ({
+      setCode,
+      maxPacks: seasonSets.find((s) => s.set_code === setCode)?.max_packs ?? 0,
+      setName: boosterData.setName,
+      count: boosterData.count,
+      cards: boosterData.cards,
+      isActive: activeSetCodes.has(setCode), // Check if this set is in active sets
+    })
+  );
 
   // Then, find active sets that haven't been scanned yet
   const scannedSetCodes = new Set(scannedSetsData.map((s) => s.setCode));
-  const unscannedSetsData = activeSets
-    .filter((set) => !scannedSetCodes.has(set.code))
+  const unscannedSetsData = seasonSets
+    .filter((set) => !scannedSetCodes.has(set.set_code))
     .map((set) => ({
-      setCode: set.code,
-      setName: set.name,
+      setCode: set.set_code,
+      maxPacks: set.max_packs,
+      setName: set.set_name,
       count: 0,
       cards: [],
       isActive: true,
@@ -66,10 +73,10 @@ export default function CompletedBoostersSection({
           {/* Summary View */}
           <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg space-y-2">
             {allSetsData.map((set) => {
-              const maxLimit = set.isActive ? maxBoostersPerSet : 0;
+              const maxLimit = set.isActive ? set.maxPacks : 0;
               const isInactive = !set.isActive;
               const isEmpty = set.count === 0;
-              
+
               // Determine colors
               let textColor = "";
               if (isInactive) {
@@ -79,15 +86,13 @@ export default function CompletedBoostersSection({
               } else {
                 textColor = "text-green-600 dark:text-green-400 font-medium";
               }
-              
+
               return (
                 <div
                   key={set.setCode}
                   className="flex justify-between items-center text-sm"
                 >
-                  <span className={textColor}>
-                    {set.setName}
-                  </span>
+                  <span className={textColor}>{set.setName}</span>
                   <span className={textColor}>
                     {set.count}/{maxLimit}
                   </span>
@@ -157,4 +162,3 @@ export default function CompletedBoostersSection({
     </div>
   );
 }
-
