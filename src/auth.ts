@@ -10,7 +10,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       issuer: process.env.AUTH_ISSUER!,
     }),
   ],
-
+  trustHost: true,
   callbacks: {
     jwt({ token }) {
       return token;
