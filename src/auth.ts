@@ -11,7 +11,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   trustHost: true,
-  secret: getCloudflareContext().env.AUTH_SECRET,
+  secret: process.env.AUTH_SECRET!,
   callbacks: {
     jwt({ token }) {
       return token;
