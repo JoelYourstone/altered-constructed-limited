@@ -40,6 +40,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return true;
     },
   },
+  pages: {
+    signIn: "/login",
+  },
 });
 
 declare module "next-auth" {
