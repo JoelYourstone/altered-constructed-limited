@@ -10,9 +10,9 @@ const VAULT_QUERY_KEY = ["vault-state"];
 /**
  * Fetch vault state from the database
  */
-async function fetchVaultState(): Promise<VaultState> {
+async function fetchVaultState(userId?: string): Promise<VaultState> {
   console.log("Fetching vault state");
-  const response = await fetch("/api/vault/state");
+  const response = await fetch(`/api/vault/state?userId=${userId}`);
 
   if (!response.ok) {
     const error = await response
@@ -74,10 +74,10 @@ async function addCardToVault(card: AddCardRequest): Promise<void> {
  * }
  * ```
  */
-export function useVaultState() {
+export function useVaultState(userId?: string) {
   return useQuery({
-    queryKey: VAULT_QUERY_KEY,
-    queryFn: fetchVaultState,
+    queryKey: userId ? [...VAULT_QUERY_KEY, userId] : VAULT_QUERY_KEY,
+    queryFn: () => fetchVaultState(userId),
     staleTime: 1000 * 30, // 30 seconds - vault data updates frequently during scanning
   });
 }

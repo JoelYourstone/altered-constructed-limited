@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS vault_boosters (
 -- Track individual scanned physical cards
 CREATE TABLE IF NOT EXISTS vault_cards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL, -- References auth system (altered_id from OAuth)
+    user_id TEXT NOT NULL, -- References auth system
     booster_id INTEGER NOT NULL, -- References vault_boosters.id
     
     -- Physical card identifier (GLOBALLY UNIQUE - prevents double scanning)

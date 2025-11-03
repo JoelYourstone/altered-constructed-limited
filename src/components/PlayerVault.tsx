@@ -5,8 +5,17 @@ import { Session } from "next-auth";
 import Link from "next/link";
 import Header from "./Header";
 
-export function MyVault({ session }: { session: Session }) {
-  const { data: vault } = useVaultState();
+export function PlayerVault({
+  session,
+  player,
+}: {
+  session: Session;
+  player?: {
+    id: string;
+    name: string;
+  };
+}) {
+  const { data: vault } = useVaultState(player?.id);
   const { data: seasonSets } = useSeasonSets();
 
   const allBoosters = [
@@ -28,13 +37,22 @@ export function MyVault({ session }: { session: Session }) {
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Player Info */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">My vault</h1>
-          <p className="text-foreground/70">
-            Welcome back,{" "}
-            <span className="font-medium">{session.user?.name}</span>
-          </p>
-        </div>
+        {!player && (
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">My vault</h1>
+            <p className="text-foreground/70">
+              Welcome back,{" "}
+              <span className="font-medium">{session.user?.name}</span>
+            </p>
+          </div>
+        )}
+        {player && (
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-2">
+              {player.name}&apos;s vault
+            </h1>
+          </div>
+        )}
 
         {/* Vault Overview */}
         <div className="grid sm:grid-cols-3 gap-4 mb-8">
@@ -63,7 +81,7 @@ export function MyVault({ session }: { session: Session }) {
               <p className="text-3xl font-bold">{totalCards}</p>
             </div>
             <Link
-              href="/my-vault/cards"
+              href={player ? `/players/${player.id}/cards` : "/my-vault/cards"}
               className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-foreground/5 text-sm px-4 py-2 whitespace-nowrap"
             >
               View All →
@@ -75,12 +93,14 @@ export function MyVault({ session }: { session: Session }) {
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">Boosters in Vault</h2>
-            <Link
-              href="/my-vault/add-cards"
-              className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-4 py-2"
-            >
-              + Add Cards
-            </Link>
+            {!player && (
+              <Link
+                href="/my-vault/add-cards"
+                className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-4 py-2"
+              >
+                + Add Cards
+              </Link>
+            )}
           </div>
 
           <div className="space-y-4">

@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { MyVault } from "@/components/MyVault";
+import { PlayerVault } from "@/components/PlayerVault";
 
 export default async function MyVaultPage() {
   const session = await auth();
@@ -9,5 +9,5 @@ export default async function MyVaultPage() {
     return redirect("/api/auth/signin?callbackUrl=/my-vault");
   }
 
-  return <MyVault session={session} />;
+  return <PlayerVault session={session} />;
 }
