@@ -1,53 +1,23 @@
 "use client";
+import { useSeasonSets } from "@/hooks/useSeasonSets";
 import { useVaultState } from "@/hooks/useVault";
+import { Session } from "next-auth";
 import Link from "next/link";
 
-interface SetVault {
-  setName: string;
-  boosterCount: number;
-  seasonLimit: number;
-  cards: {
-    common: number;
-    rare: number;
-    unique: number;
-  };
-}
-
-export function MyVault() {
+export function MyVault({ session }: { session: Session }) {
   const { data: vault, isLoading, error } = useVaultState();
+  const { data: seasonSets } = useSeasonSets();
   console.log("vault", vault);
 
-  const playerVault: SetVault[] =
-    vault?.activeBoosters.map((booster) => ({
-      setName: booster.set_name,
-      boosterCount: booster.cards.length,
-      seasonLimit: booster.cards.length,
-      cards: {
-        common: booster.cards.filter(
-          (card) => card.card_data.rarity === "COMMON"
-        ).length,
-        rare: booster.cards.filter((card) => card.card_data.rarity === "RARE")
-          .length,
-        unique: booster.cards.filter(
-          (card) => card.card_data.rarity === "UNIQUE"
-        ).length,
-      },
-    })) || [];
-
-  // {
-  //   setName: "Ashes of Ahala",
-  //   boosterCount: 4,
-  //   seasonLimit: 12,
-  //   cards: { common: 32, rare: 6, unique: 2 },
-  // },
-
-  const totalBoosters = playerVault.reduce(
-    (sum, set) => sum + set.boosterCount,
-    0
-  );
-  const maxTotalBoosters = 22;
-  const totalCards = playerVault.reduce(
-    (sum, set) => sum + set.cards.common + set.cards.rare + set.cards.unique,
+  const allBoosters = [
+    ...(vault?.activeBoosters ?? []),
+    ...(vault?.completedBoosters ?? []),
+  ];
+  const totalBoosters = allBoosters.length;
+  const maxTotalBoosters =
+    seasonSets?.reduce((sum, set) => sum + set.max_packs, 0) ?? 0;
+  const totalCards = allBoosters.reduce(
+    (sum, booster) => sum + booster.cards.length,
     0
   );
 
@@ -62,7 +32,7 @@ export function MyVault() {
           <h1 className="text-3xl font-bold mb-2">Your vault</h1>
           <p className="text-foreground/70">
             Welcome back,{" "}
-            {/* <span className="font-medium">{session.user?.name}</span> */}
+            <span className="font-medium">{session.user?.name}</span>
           </p>
         </div>
 
@@ -91,17 +61,12 @@ export function MyVault() {
             </p>
             <p className="text-3xl font-bold">{totalCards}</p>
           </div>
-
-          <div className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6">
-            <p className="text-sm text-foreground/60 mb-1">Current Season</p>
-            <p className="text-2xl font-bold">Season 1</p>
-          </div>
         </div>
 
         {/* Vault Breakdown by Set */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Your Vault by Set</h2>
+            <h2 className="text-2xl font-semibold">Boosters in Vault</h2>
             <Link
               href="/my-vault/add-cards"
               className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-4 py-2"
@@ -111,23 +76,19 @@ export function MyVault() {
           </div>
 
           <div className="space-y-4">
-            {playerVault.map((set) => (
+            {allBoosters.map((booster) => (
               <div
-                key={set.setName}
+                key={booster.id}
                 className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6"
               >
                 <div className="flex justify-between items-start mb-4">
                   <div>
-                    <h3 className="text-xl font-semibold">{set.setName}</h3>
-                    <p className="text-sm text-foreground/60">
-                      {set.boosterCount}/{set.seasonLimit} boosters (Season 1
-                      limit)
-                    </p>
+                    <h3 className="text-xl font-semibold">
+                      {booster.set_name}
+                    </h3>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold">
-                      {set.cards.common + set.cards.rare + set.cards.unique}
-                    </p>
+                    <p className="text-2xl font-bold">{booster.cards.length}</p>
                     <p className="text-sm text-foreground/60">cards</p>
                   </div>
                 </div>
@@ -137,7 +98,7 @@ export function MyVault() {
                     <div
                       className="bg-foreground h-2 rounded-full transition-all"
                       style={{
-                        width: `${(set.boosterCount / set.seasonLimit) * 100}%`,
+                        width: `${(booster.cards.length / 12) * 100}%`,
                       }}
                     />
                   </div>
@@ -146,15 +107,40 @@ export function MyVault() {
                 <div className="grid grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-foreground/60">Common</p>
-                    <p className="font-semibold">{set.cards.common}</p>
+                    <p className="font-semibold">
+                      {booster.cards.reduce(
+                        (sum, card) =>
+                          sum +
+                          (card.card_data.rarity.reference === "COMMON"
+                            ? 1
+                            : 0),
+                        0
+                      )}
+                    </p>
                   </div>
                   <div>
                     <p className="text-foreground/60">Rare</p>
-                    <p className="font-semibold">{set.cards.rare}</p>
+                    <p className="font-semibold">
+                      {booster.cards.reduce(
+                        (sum, card) =>
+                          sum +
+                          (card.card_data.rarity.reference === "RARE" ? 1 : 0),
+                        0
+                      )}
+                    </p>
                   </div>
                   <div>
                     <p className="text-foreground/60">Unique</p>
-                    <p className="font-semibold">{set.cards.unique}</p>
+                    <p className="font-semibold">
+                      {booster.cards.reduce(
+                        (sum, card) =>
+                          sum +
+                          (card.card_data.rarity.reference === "UNIQUE"
+                            ? 1
+                            : 0),
+                        0
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>

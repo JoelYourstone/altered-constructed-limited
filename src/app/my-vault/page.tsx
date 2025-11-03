@@ -14,5 +14,5 @@ export default async function MyVaultPage() {
     return redirect("/api/auth/signin?callbackUrl=/my-vault");
   }
 
-  return <MyVault />;
+  return <MyVault session={session} />;
 }

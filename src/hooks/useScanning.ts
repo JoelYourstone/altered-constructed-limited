@@ -1,234 +1,80 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  getScanningState,
-  saveScanningState,
-  ScannedCard,
-  ScanningState,
-  SetBoosterProgress,
-} from "@/lib/scanningState";
-import { useSeasonSets } from "./useSeasonSets";
+import type { CardData } from "@/lib/card-data";
 
-const SCANNING_QUERY_KEY = ["scanning-state"];
+const FAILED_SCANS_QUERY_KEY = ["failed-scans"];
 
-export function useScanningState() {
+export interface FailedScan {
+  uniqueToken: string;
+  card: CardData;
+  reason: string;
+  timestamp: number;
+}
+
+interface FailedScansState {
+  failedScans: FailedScan[];
+}
+
+// Client-side only - failed scans storage
+function getFailedScans(): FailedScansState {
+  if (typeof window === "undefined") {
+    return { failedScans: [] };
+  }
+
+  const stored = localStorage.getItem("failed_scans");
+  if (stored) {
+    try {
+      return JSON.parse(stored);
+    } catch {
+      return { failedScans: [] };
+    }
+  }
+
+  return { failedScans: [] };
+}
+
+function saveFailedScans(state: FailedScansState): void {
+  if (typeof window === "undefined") return;
+  localStorage.setItem("failed_scans", JSON.stringify(state));
+}
+
+export function useFailedScans() {
   return useQuery({
-    queryKey: SCANNING_QUERY_KEY,
-    queryFn: getScanningState,
+    queryKey: FAILED_SCANS_QUERY_KEY,
+    queryFn: getFailedScans,
   });
 }
 
-export function useAddCard() {
+export function useAddFailedScan() {
   const queryClient = useQueryClient();
-  const { data: seasonSets } = useSeasonSets();
 
   return useMutation({
-    mutationFn: async (card: ScannedCard) => {
-      const currentState = getScanningState();
-
-      if (!seasonSets) {
-        console.log("No season sets found");
-        alert("No season sets found");
-        throw new Error("No season sets found");
-      }
-
-      // Check if this physical card (uniqueToken) has already been scanned
-      const allCards = currentState.activeBoosters.flatMap((b) => b.cards);
-      const isDuplicate = allCards.some(
-        (c) => c.uniqueToken === card.uniqueToken
-      );
-      if (isDuplicate) {
-        console.log("Duplicate card detected:", card.uniqueToken);
-        return currentState;
-      }
-
-      const setCode = card.cardSet.code;
-
-      // Find the max packs allowed for this set from the database
-      const seasonSet = seasonSets.find((s) => s.set_code === setCode);
-
-      if (!seasonSet) {
-        console.log(`Set ${setCode} is not an active season set`);
-        const newState: ScanningState = {
-          ...currentState,
-          failedScans: [
-            ...currentState.failedScans,
-            {
-              card,
-              reason: `Set ${setCode} is not active in the current season`,
-              timestamp: Date.now(),
-            },
-          ],
-        };
-        saveScanningState(newState);
-        return newState;
-      }
-
-      const maxPacksForSet = seasonSet.max_packs;
-
-      // Helper function to check if a card can fit in a booster
-      const canFitCard = (booster: SetBoosterProgress): boolean => {
-        if (card.cardType === "HERO") {
-          return booster.progress.hero < 1;
-        } else if (card.rarity === "COMMON") {
-          return booster.progress.common < 8;
-        } else if (card.rarity === "RARE" || card.rarity === "UNIQUE") {
-          return booster.progress.rare + booster.progress.unique < 3;
-        }
-        return false;
+    mutationFn: async (failedScan: FailedScan) => {
+      const currentState = getFailedScans();
+      const newState: FailedScansState = {
+        failedScans: [...currentState.failedScans, failedScan],
       };
-
-      // Find the first booster for this set that has room for this card
-      let targetBooster = currentState.activeBoosters.find(
-        (b) => b.setCode === setCode && canFitCard(b)
-      );
-
-      const isNewBooster = !targetBooster;
-
-      // If no booster has room, check if we can create a new one
-      if (!targetBooster) {
-        const boostersForThisSet = currentState.activeBoosters.filter(
-          (b) => b.setCode === setCode
-        );
-
-        // Check if we've hit the limit for this set
-        if (boostersForThisSet.length >= maxPacksForSet) {
-          console.log(
-            `Cannot create new booster for ${setCode}: limit of ${maxPacksForSet} reached`
-          );
-          // Add to failed scans
-          const newState: ScanningState = {
-            ...currentState,
-            failedScans: [
-              ...currentState.failedScans,
-              {
-                card,
-                reason: `Maximum ${maxPacksForSet} boosters per set limit reached`,
-                timestamp: Date.now(),
-              },
-            ],
-          };
-          saveScanningState(newState);
-          return newState;
-        }
-
-        console.log(
-          `Creating new booster for ${setCode}, card type: ${card.cardType}, rarity: ${card.rarity}`
-        );
-        targetBooster = {
-          setCode,
-          setName: card.cardSet.name,
-          progress: { hero: 0, common: 0, rare: 0, unique: 0 },
-          cards: [],
-          boosterId: `${setCode}_${Date.now()}_${Math.random()}`,
-        };
-      } else {
-        console.log(`Adding to existing booster ${targetBooster.boosterId}`);
-      }
-
-      // Add card
-      const updatedCards = [...targetBooster.cards, card];
-
-      // Update progress
-      const newProgress = { ...targetBooster.progress };
-
-      if (card.cardType === "HERO") {
-        newProgress.hero += 1;
-      } else if (card.rarity === "COMMON") {
-        newProgress.common += 1;
-      } else if (card.rarity === "RARE") {
-        newProgress.rare += 1;
-      } else if (card.rarity === "UNIQUE") {
-        newProgress.unique += 1;
-      }
-
-      // Create updated booster
-      const updatedBooster: SetBoosterProgress = {
-        ...targetBooster,
-        progress: newProgress,
-        cards: updatedCards,
-      };
-
-      // Update active boosters array
-      // If this is a new booster, add it to the end
-      // If updating existing, replace it IN PLACE to maintain order
-      let updatedBoosters: SetBoosterProgress[];
-
-      if (isNewBooster) {
-        // Add new booster to the end
-        updatedBoosters = [...currentState.activeBoosters, updatedBooster];
-        console.log(
-          `Added new booster, now have ${updatedBoosters.length} boosters`
-        );
-      } else {
-        // Replace existing booster in place to maintain order
-        updatedBoosters = currentState.activeBoosters.map((b) =>
-          b.boosterId === targetBooster!.boosterId ? updatedBooster : b
-        );
-        console.log(
-          `Updated existing booster ${targetBooster!.boosterId} in place`
-        );
-      }
-
-      const newState: ScanningState = {
-        ...currentState,
-        activeBoosters: updatedBoosters,
-      };
-
-      console.log(
-        `New state has ${newState.activeBoosters.length} active boosters`
-      );
-
-      // Check if booster is complete
-      const totalRaresAndUniques = newProgress.rare + newProgress.unique;
-      const isComplete =
-        newProgress.hero === 1 &&
-        newProgress.common === 8 &&
-        totalRaresAndUniques === 3;
-
-      if (isComplete) {
-        // Move to completed
-        const existingCompleted = newState.completedBoosters[setCode];
-        newState.completedBoosters = {
-          ...newState.completedBoosters,
-          [setCode]: {
-            count: existingCompleted ? existingCompleted.count + 1 : 1,
-            setName: card.cardSet.name,
-            cards: existingCompleted
-              ? [...existingCompleted.cards, updatedBooster.cards]
-              : [updatedBooster.cards],
-          },
-        };
-
-        // Remove this booster from active
-        newState.activeBoosters = newState.activeBoosters.filter(
-          (b) => b.boosterId !== updatedBooster.boosterId
-        );
-      }
-
-      saveScanningState(newState);
+      saveFailedScans(newState);
       return newState;
     },
     onSuccess: (newState) => {
-      queryClient.setQueryData(SCANNING_QUERY_KEY, newState);
+      queryClient.setQueryData(FAILED_SCANS_QUERY_KEY, newState);
     },
   });
 }
 
-export function useClearScanning() {
+export function useClearFailedScans() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async () => {
-      const emptyState: ScanningState = {
-        activeBoosters: [],
-        completedBoosters: {},
+      const emptyState: FailedScansState = {
         failedScans: [],
       };
-      saveScanningState(emptyState);
+      saveFailedScans(emptyState);
       return emptyState;
     },
     onSuccess: (newState) => {
-      queryClient.setQueryData(SCANNING_QUERY_KEY, newState);
+      queryClient.setQueryData(FAILED_SCANS_QUERY_KEY, newState);
     },
   });
 }
@@ -238,18 +84,17 @@ export function useRemoveFailedScan() {
 
   return useMutation({
     mutationFn: async (timestamp: number) => {
-      const currentState = getScanningState();
-      const newState: ScanningState = {
-        ...currentState,
+      const currentState = getFailedScans();
+      const newState: FailedScansState = {
         failedScans: currentState.failedScans.filter(
           (f) => f.timestamp !== timestamp
         ),
       };
-      saveScanningState(newState);
+      saveFailedScans(newState);
       return newState;
     },
     onSuccess: (newState) => {
-      queryClient.setQueryData(SCANNING_QUERY_KEY, newState);
+      queryClient.setQueryData(FAILED_SCANS_QUERY_KEY, newState);
     },
   });
 }

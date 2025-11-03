@@ -1,28 +1,26 @@
-import { AddCardRequest } from "@/app/api/vault/add-card/route";
-import { useAddCardToVault } from "@/hooks/useVault";
-import { ScannedCard } from "@/lib/scanningState";
-
+import type { CardData } from "@/lib/card-data";
 interface ThinCardProps {
-  card: ScannedCard;
+  card: CardData;
 }
 
 export default function ThinCard({ card }: ThinCardProps) {
-  const isUnique = card.rarity.toUpperCase() === "UNIQUE";
-  const factionColor = card.faction?.color || "#666666";
-  const isHero = card.cardTypeString === "Hero";
-  const addCardToVault = useAddCardToVault();
+  const isUnique = card.rarity.reference === "UNIQUE";
+  const factionColor = card.mainFaction.color || "#666666";
+  const isHero = card.cardType.reference === "HERO";
 
   let cardTypeText = "";
   if (isHero) {
     // For heroes, show "Faction Hero"
-    const factionName = card.faction?.name || "";
+    const factionName = card.mainFaction.name || "";
     cardTypeText = `${factionName} Hero`;
-  } else if (card.cardSubtypeString) {
+  } else if (card.cardSubTypes.length > 0) {
     // For other cards with subtypes, show "CardType - Subtype"
-    cardTypeText = `${card.cardTypeString} - ${card.cardSubtypeString}`;
+    cardTypeText = `${card.cardType.name} - ${card.cardSubTypes
+      .map((subtype) => subtype.name)
+      .join(", ")}`;
   } else {
     // For other cards without subtypes, show just "CardType"
-    cardTypeText = card.cardTypeString;
+    cardTypeText = card.cardType.name;
   }
 
   // Banner background - extremely shiny golden for uniques, faction color for others
@@ -55,7 +53,7 @@ export default function ThinCard({ card }: ThinCardProps) {
   const getRarityGemStyle = () => {
     if (isHero) return null;
 
-    switch (card.rarity.toUpperCase()) {
+    switch (card.rarity.reference) {
       case "COMMON":
         // Normal stone with gradient and small shadow
         return {
@@ -110,8 +108,8 @@ export default function ThinCard({ card }: ThinCardProps) {
             }}
           />
           {/* Shine highlight overlay for rare and unique */}
-          {(card.rarity.toUpperCase() === "UNIQUE" ||
-            card.rarity.toUpperCase() === "RARE") && (
+          {(card.rarity.reference === "UNIQUE" ||
+            card.rarity.reference === "RARE") && (
             <div
               className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-none"
               style={{
@@ -122,7 +120,7 @@ export default function ThinCard({ card }: ThinCardProps) {
                 borderRight: "8px solid transparent",
                 borderTop: "5px solid rgba(255, 255, 255, 0.6)",
                 filter:
-                  card.rarity.toUpperCase() === "UNIQUE"
+                  card.rarity.reference === "UNIQUE"
                     ? "blur(1px)"
                     : "blur(3px)",
               }}
@@ -153,28 +151,6 @@ export default function ThinCard({ card }: ThinCardProps) {
           </div>
         </div>
       </div>
-      <button
-        onClick={() => {
-          addCardToVault.mutate({
-            uniqueToken: card.uniqueToken,
-            reference: card.reference,
-            cardData: {
-              name: card.name,
-              rarity: card.rarity,
-              cardType: card.cardType,
-              cardTypeString: card.cardTypeString,
-              cardSubtypeString: card.cardSubtypeString,
-              cardSet: card.cardSet,
-              faction: card.faction,
-              imagePath: card.imagePath,
-            },
-          } satisfies AddCardRequest);
-        }}
-        type="button"
-        className="w-full h-full"
-      >
-        Hej!
-      </button>
     </div>
   );
 }

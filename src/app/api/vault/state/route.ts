@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { auth } from "@/auth";
-
-export interface CardData {
-  [key: string]: any;
-}
-
+import type { CardData } from "@/lib/card-data";
 interface VaultCard {
   id: number;
   user_id: string;
@@ -37,14 +33,7 @@ export interface VaultBoosterViewData extends Omit<VaultBooster, "cards"> {
 
 export interface VaultState {
   activeBoosters: VaultBoosterViewData[];
-  completedBoosters: Record<
-    string,
-    {
-      count: number;
-      setName: string;
-      boosters: VaultBoosterViewData[];
-    }
-  >;
+  completedBoosters: VaultBoosterViewData[];
 }
 
 export async function GET(request: NextRequest) {
@@ -65,6 +54,8 @@ export async function GET(request: NextRequest) {
       .bind(userId)
       .all<Omit<VaultBooster, "cards">>();
 
+    console.log("boosters count", boostersResult.results.length);
+
     if (!boostersResult.success) {
       console.error("Failed to fetch boosters:", boostersResult.error);
       return NextResponse.json(
@@ -84,6 +75,8 @@ export async function GET(request: NextRequest) {
     )
       .bind(userId)
       .all<VaultCard>();
+
+    console.log("cards count", cardsResult.results.length);
 
     if (!cardsResult.success) {
       console.error("Failed to fetch cards:", cardsResult.error);
@@ -124,31 +117,9 @@ export async function GET(request: NextRequest) {
       (b) => b.completed_at
     );
 
-    // Group completed boosters by set
-    const completedBoosters: Record<
-      string,
-      {
-        count: number;
-        setName: string;
-        boosters: VaultBoosterViewData[];
-      }
-    > = {};
-
-    completedBoostersList.forEach((booster) => {
-      if (!completedBoosters[booster.set_code]) {
-        completedBoosters[booster.set_code] = {
-          count: 0,
-          setName: booster.set_name,
-          boosters: [],
-        };
-      }
-      completedBoosters[booster.set_code].count++;
-      completedBoosters[booster.set_code].boosters.push(booster);
-    });
-
     const state: VaultState = {
       activeBoosters,
-      completedBoosters,
+      completedBoosters: completedBoostersList,
     };
 
     return NextResponse.json(state, { status: 200 });

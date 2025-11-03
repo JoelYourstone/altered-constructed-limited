@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { auth } from "@/auth";
+import type { CardData } from "@/lib/card-data";
 
 export const runtime = "edge";
 
@@ -11,23 +12,7 @@ interface CloudflareEnv {
 export interface AddCardRequest {
   uniqueToken: string;
   reference: string;
-  cardData: {
-    name: string;
-    rarity: string;
-    cardType: string;
-    cardTypeString?: string;
-    cardSubtypeString?: string;
-    cardSet: {
-      code: string;
-      name: string;
-    };
-    faction?: {
-      reference: string;
-      name: string;
-      color: string;
-    };
-    imagePath?: string;
-  };
+  card: CardData;
 }
 
 export async function POST(request: NextRequest) {
@@ -40,7 +25,7 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.email;
     const body = (await request.json()) as AddCardRequest;
-    const { uniqueToken, reference, cardData } = body;
+    const { uniqueToken, reference, card } = body;
 
     const { env } = getCloudflareContext();
 
@@ -62,13 +47,13 @@ export async function POST(request: NextRequest) {
     const seasonSetsResult = await env.DB.prepare(
       "SELECT * FROM season_sets WHERE set_code = ? AND is_active = ?"
     )
-      .bind(cardData.cardSet.code, true)
+      .bind(card.cardSet.code, true)
       .first<{ set_code: string; max_packs: number }>();
 
     if (!seasonSetsResult) {
       return NextResponse.json(
         {
-          error: `Set ${cardData.cardSet.code} is not active in the current season`,
+          error: `Set ${card.cardSet.code} is not active in the current season`,
         },
         { status: 400 }
       );
@@ -84,7 +69,7 @@ export async function POST(request: NextRequest) {
        WHERE vb.user_id = ? AND vb.set_code = ? AND vb.completed_at IS NULL
        ORDER BY vb.created_at ASC`
     )
-      .bind(userId, cardData.cardSet.code)
+      .bind(userId, card.cardSet.code)
       .all<{ id: number; card_count: number }>();
 
     const activeBoosters = activeBoostersResult.results || [];
@@ -93,7 +78,7 @@ export async function POST(request: NextRequest) {
     const totalBoostersResult = await env.DB.prepare(
       "SELECT COUNT(*) as count FROM vault_boosters WHERE user_id = ? AND set_code = ?"
     )
-      .bind(userId, cardData.cardSet.code)
+      .bind(userId, card.cardSet.code)
       .first<{ count: number }>();
 
     const totalBoosters = totalBoostersResult?.count || 0;
@@ -124,11 +109,14 @@ export async function POST(request: NextRequest) {
         else if (data.rarity === "UNIQUE") uniqueCount++;
       });
 
-      if (cardData.cardType === "HERO") {
+      if (card.cardType.reference === "HERO") {
         return heroCount < 1;
-      } else if (cardData.rarity === "COMMON") {
+      } else if (card.rarity.reference === "COMMON") {
         return commonCount < 8;
-      } else if (cardData.rarity === "RARE" || cardData.rarity === "UNIQUE") {
+      } else if (
+        card.rarity.reference === "RARE" ||
+        card.rarity.reference === "UNIQUE"
+      ) {
         return rareCount + uniqueCount < 3;
       }
       return false;
@@ -162,7 +150,7 @@ export async function POST(request: NextRequest) {
          VALUES (?, ?, ?)
          RETURNING id`
       )
-        .bind(userId, cardData.cardSet.code, cardData.cardSet.name)
+        .bind(userId, card.cardSet.code, card.cardSet.name)
         .first<{ id: number }>();
 
       targetBoosterId = newBoosterResult?.id || null;
@@ -176,7 +164,7 @@ export async function POST(request: NextRequest) {
     }
 
     const alteredCardData = await fetch(
-      `https://api.altered.gg/cards/${reference}?locale=en-us`
+      `https://api.altered.gg/public/cards/${reference}?locale=en-us`
     ).then((res) => res.json());
 
     // Upsert card metadata

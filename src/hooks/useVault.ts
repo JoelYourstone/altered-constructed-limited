@@ -162,13 +162,13 @@ function calculateBoosterProgress(booster: VaultBoosterViewData) {
   booster.cards.forEach((card) => {
     try {
       const cardData = card.card_data;
-      if (cardData.cardType === "HERO") {
+      if (cardData.cardType.reference === "HERO") {
         heroCount++;
-      } else if (cardData.rarity === "COMMON") {
+      } else if (cardData.rarity.reference === "COMMON") {
         commonCount++;
-      } else if (cardData.rarity === "RARE") {
+      } else if (cardData.rarity.reference === "RARE") {
         rareCount++;
-      } else if (cardData.rarity === "UNIQUE") {
+      } else if (cardData.rarity.reference === "UNIQUE") {
         uniqueCount++;
       }
     } catch (error) {
