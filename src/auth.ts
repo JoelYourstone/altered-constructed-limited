@@ -24,7 +24,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       await env.DB.prepare(
         `INSERT INTO users (auth_id, name, email, image)
          VALUES (?, ?, ?, ?)
-         ON CONFLICT (auth_id) 
+         ON CONFLICT (email) 
          DO UPDATE SET name = ?, email = ?, image = ?, updated_at = CURRENT_TIMESTAMP`
       )
         .bind(
