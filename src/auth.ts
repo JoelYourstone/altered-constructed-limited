@@ -2,6 +2,10 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import NextAuth from "next-auth";
 import Auth0Provider from "next-auth/providers/auth0";
 
+if (!process.env.AUTH_SECRET) {
+  throw new Error("AUTH_SECRET is not set");
+}
+
 export const { handlers, auth, signIn, signOut } = NextAuth({
   providers: [
     Auth0Provider({
@@ -11,7 +15,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   trustHost: true,
-  secret: process.env.AUTH_SECRET!,
+  secret: process.env.AUTH_SECRET,
   callbacks: {
     jwt({ token }) {
       return token;
