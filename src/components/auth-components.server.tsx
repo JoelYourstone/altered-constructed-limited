@@ -3,7 +3,7 @@
 import { signIn, signOut } from "@/auth";
 
 export async function signInAction() {
-  await signIn();
+  await signIn("auth0");
 }
 
 export async function signOutAction() {
