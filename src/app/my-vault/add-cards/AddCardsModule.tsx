@@ -63,7 +63,13 @@ export default function AddCardsModule() {
       }
 
       const response = await fetch(
-        `https://api.altered.gg/public/cards/${cardObject.card.reference}?locale=en-us`
+        `https://api.altered.gg/public/cards/${cardObject.card.reference}?locale=en-us`,
+        {
+          headers: {
+            UserAgent:
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          },
+        }
       );
       const data = (await response.json()) as CardData;
 
@@ -88,7 +94,13 @@ export default function AddCardsModule() {
           error.message.includes("not active")
         ) {
           const response = await fetch(
-            `https://api.altered.gg/public/cards/${cardObject.card.reference}?locale=en-us`
+            `https://api.altered.gg/public/cards/${cardObject.card.reference}?locale=en-us`,
+            {
+              headers: {
+                UserAgent:
+                  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+              },
+            }
           );
           const data = (await response.json()) as CardData;
 

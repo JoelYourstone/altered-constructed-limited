@@ -158,7 +158,13 @@ export async function POST(request: NextRequest) {
     }
 
     const alteredCardData = await fetch(
-      `https://api.altered.gg/public/cards/${reference}?locale=en-us`
+      `https://api.altered.gg/public/cards/${reference}?locale=en-us`,
+      {
+        headers: {
+          UserAgent:
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      }
     ).then((res) => res.json());
 
     // Upsert card metadata
