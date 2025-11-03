@@ -3,6 +3,7 @@ import { useSeasonSets } from "@/hooks/useSeasonSets";
 import { useVaultState } from "@/hooks/useVault";
 import { Session } from "next-auth";
 import Link from "next/link";
+import Header from "./Header";
 
 export function MyVault({ session }: { session: Session }) {
   const { data: vault, isLoading, error } = useVaultState();
@@ -24,12 +25,12 @@ export function MyVault({ session }: { session: Session }) {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      {/* <Header session={session} /> */}
+      <Header session={session} />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Player Info */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Your vault</h1>
+          <h1 className="text-3xl font-bold mb-2">My vault</h1>
           <p className="text-foreground/70">
             Welcome back,{" "}
             <span className="font-medium">{session.user?.name}</span>
@@ -55,11 +56,19 @@ export function MyVault({ session }: { session: Session }) {
             </div>
           </div>
 
-          <div className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6">
-            <p className="text-sm text-foreground/60 mb-1">
-              Total Cards in Vault
-            </p>
-            <p className="text-3xl font-bold">{totalCards}</p>
+          <div className="bg-background border border-black/[.08] dark:border-white/[.145] rounded-lg p-6 flex items-center justify-between">
+            <div>
+              <p className="text-sm text-foreground/60 mb-1">
+                Total Cards in Vault
+              </p>
+              <p className="text-3xl font-bold">{totalCards}</p>
+            </div>
+            <Link
+              href="/my-vault/cards"
+              className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-foreground/5 text-sm px-4 py-2 whitespace-nowrap"
+            >
+              View All →
+            </Link>
           </div>
         </div>
 

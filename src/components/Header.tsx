@@ -21,7 +21,7 @@ export default function Header({
           <div className="flex items-center gap-3">
             {session?.user ? (
               <>
-                <span className="hidden text-sm sm:inline-flex text-foreground/70">
+                <span className="hidden text-sm sm:inline-flex text-foreground/70 ">
                   {session.user.name}
                 </span>
                 {session.user.image && (
@@ -52,8 +52,7 @@ export default function Header({
             href="/"
             className="text-xl sm:text-2xl font-bold hover:opacity-80 truncate"
           >
-            <span className="hidden sm:inline">Altered Vault Format</span>
-            <span className="sm:hidden">Vault Format</span>
+            <span className="sm:inline">Altered Vault Format</span>
           </Link>
           <nav className="flex flex-wrap items-center gap-3 sm:gap-6">
             <Link
@@ -71,7 +70,7 @@ export default function Header({
             <div className="flex items-center gap-2 sm:gap-4 sm:ml-4 sm:pl-4 sm:border-l border-black/[.08] dark:border-white/[.145]">
               {session?.user ? (
                 <>
-                  <span className="text-sm text-foreground/70 max-w-[120px] sm:max-w-[200px] truncate">
+                  <span className="text-sm text-foreground/70 max-w-[120px] sm:max-w-[200px] whitespace-nowrap">
                     {session.user.alteredId || session.user.name}
                   </span>
                   {session.user.image && (
