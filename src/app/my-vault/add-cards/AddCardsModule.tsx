@@ -17,9 +17,8 @@ import CompletedBoostersSection from "@/components/CompletedBoostersSection";
 import type { CardData } from "@/lib/card-data";
 import { AddCardRequest } from "@/app/api/vault/add-card/route";
 import Link from "next/link";
-import { Session } from "next-auth";
 
-export default function AddCardsModule({ session }: { session: Session }) {
+export default function AddCardsModule() {
   const processingRef = useRef<ProcessingScanAreaRef>(null);
 
   const { data: vaultState } = useVaultState();

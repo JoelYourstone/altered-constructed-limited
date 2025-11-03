@@ -71,7 +71,7 @@ export default function Header({
               {session?.user ? (
                 <>
                   <span className="text-sm text-foreground/70 max-w-[120px] sm:max-w-[200px] whitespace-nowrap">
-                    {session.user.alteredId || session.user.name}
+                    {session.user?.name}
                   </span>
                   {session.user.image && (
                     <img

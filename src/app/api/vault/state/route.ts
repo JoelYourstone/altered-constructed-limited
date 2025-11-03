@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { auth } from "@/auth";
 import type { CardData } from "@/lib/card-data";
@@ -36,7 +36,7 @@ export interface VaultState {
   completedBoosters: VaultBoosterViewData[];
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const session = await auth();
 

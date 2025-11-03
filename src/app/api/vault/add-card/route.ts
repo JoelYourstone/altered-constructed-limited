@@ -3,12 +3,6 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { auth } from "@/auth";
 import type { CardData } from "@/lib/card-data";
 
-export const runtime = "edge";
-
-interface CloudflareEnv {
-  DB: D1Database;
-}
-
 export interface AddCardRequest {
   uniqueToken: string;
   reference: string;

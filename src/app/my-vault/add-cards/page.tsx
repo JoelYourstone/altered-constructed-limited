@@ -4,8 +4,8 @@ import AddCardsModule from "./AddCardsModule";
 
 export default async function AddCardsPage() {
   const session = await auth();
-  if (!session) {
+  if (!session?.user) {
     redirect("/api/auth/signin?callbackUrl=/my-vault/add-cards");
   }
-  return <AddCardsModule session={session} />;
+  return <AddCardsModule />;
 }

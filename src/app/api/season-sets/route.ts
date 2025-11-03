@@ -1,11 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
-
-export const runtime = "edge";
-
-interface CloudflareEnv {
-  DB: D1Database;
-}
 
 export interface SeasonSet {
   id: number;
@@ -18,10 +12,10 @@ export interface SeasonSet {
   updated_at: string;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const { env } = getCloudflareContext<CloudflareEnv>();
-    
+    const { env } = getCloudflareContext();
+
     if (!env.DB) {
       return NextResponse.json(
         { error: "Database not configured" },
@@ -53,4 +47,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-

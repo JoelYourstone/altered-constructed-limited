@@ -6,9 +6,8 @@ import Link from "next/link";
 import Header from "./Header";
 
 export function MyVault({ session }: { session: Session }) {
-  const { data: vault, isLoading, error } = useVaultState();
+  const { data: vault } = useVaultState();
   const { data: seasonSets } = useSeasonSets();
-  console.log("vault", vault);
 
   const allBoosters = [
     ...(vault?.activeBoosters ?? []),

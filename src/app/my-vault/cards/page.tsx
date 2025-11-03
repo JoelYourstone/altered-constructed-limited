@@ -1,7 +1,6 @@
 "use client";
 import { useVaultState } from "@/hooks/useVault";
 import Link from "next/link";
-import BoosterCardList from "@/components/BoosterCardList";
 import type { CardViewData } from "@/app/api/vault/state/route";
 import ThinCard from "@/components/ThinCard";
 
@@ -70,7 +69,7 @@ export default function AllCardsPage() {
             {allCards.length === 0 ? (
               <div className="text-center py-12">
                 <p className="text-foreground/70 mb-4">
-                  You don't have any cards in your vault yet.
+                  You don&apos;t have any cards in your vault yet.
                 </p>
                 <Link
                   href="/my-vault/add-cards"
