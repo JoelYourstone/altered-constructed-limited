@@ -6,7 +6,8 @@ import Header from "@/components/Header";
 
 export default async function PlayersPage() {
   const session = await auth();
-  if (!session) {
+  console.log("Session", session);
+  if (!session?.user) {
     return redirect("/api/auth/signin?callbackUrl=/players");
   }
 
