@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const cardGuidResponse = await fetch(
+    const cardScanResponse = await fetch(
       `https://browser-worker.joel-yourstone-85e.workers.dev/?code=${code}`,
       {
         method: "GET",
@@ -24,17 +24,17 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    if (!cardGuidResponse.ok) {
-      console.error("Failed to fetch card GUID:", cardGuidResponse.statusText);
-      console.log(await cardGuidResponse.text());
+    if (!cardScanResponse.ok) {
+      console.error("Failed to scan card:", cardScanResponse.statusText);
+      console.log(await cardScanResponse.text());
       return NextResponse.json(
-        { error: "Failed to fetch card GUID" },
-        { status: cardGuidResponse.status }
+        { error: "Failed to scan card" },
+        { status: cardScanResponse.status }
       );
     }
 
-    const cardGuid = await cardGuidResponse.text();
-    return new NextResponse(cardGuid, { status: 200 });
+    const cardScan = await cardScanResponse.json();
+    return NextResponse.json(cardScan, { status: 200 });
   } catch (error) {
     console.error("Error fetching card GUID:", error);
     return NextResponse.json(

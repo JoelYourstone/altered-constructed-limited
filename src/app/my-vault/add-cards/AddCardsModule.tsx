@@ -39,7 +39,10 @@ export default function AddCardsModule() {
     }
   }
 
-  async function handleFullCardScan(tinyUrl: string, cardObject: any) {
+  async function handleFullCardScan(
+    tinyUrl: string,
+    cardObject: { card: { imagePath: string; reference: string } }
+  ) {
     try {
       const cardInVault = [
         ...(vaultState?.activeBoosters || []),

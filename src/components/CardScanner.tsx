@@ -3,7 +3,10 @@ import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
 import { useRef } from "react";
 
 export default function CardScanner(props: {
-  onFullCardScan?: (tinyUrl: string, cardObject: any) => void;
+  onFullCardScan?: (
+    tinyUrl: string,
+    cardObject: { card: { imagePath: string; reference: string } }
+  ) => void;
   onTinyUrlScan?: (tinyUrl: string) => void;
   onFailedScan?: (tinyUrl: string | null, error: string) => void;
 }) {
@@ -41,15 +44,15 @@ export default function CardScanner(props: {
       scannedTinyUrls.current.set(tinyUrl, now);
 
       try {
-        const cardGuidResponse = await fetch(`/api/card-scan?code=${tinyUrl}`, {
+        const cardScanResponse = await fetch(`/api/card-scan?code=${tinyUrl}`, {
           method: "GET",
         });
-        if (!cardGuidResponse.ok) {
+        if (!cardScanResponse.ok) {
           props.onFailedScan?.(tinyUrl, "Failed to fetch card data");
           continue;
         }
-        const cardObject = (await cardGuidResponse.json()) as {
-          card: { imagePath: string };
+        const cardObject = (await cardScanResponse.json()) as {
+          card: { imagePath: string; reference: string };
         };
 
         props.onFullCardScan?.(tinyUrl, cardObject);
