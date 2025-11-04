@@ -57,7 +57,7 @@
 -- Track booster packs (groups of 12 cards)
 CREATE TABLE IF NOT EXISTS vault_boosters (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL, -- References auth system (altered_id from OAuth)
+    user_id TEXT NOT NULL, -- References auth id
     set_code TEXT NOT NULL, -- References season_sets.set_code
     set_name TEXT NOT NULL, -- Denormalized for display
     
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS vault_boosters (
 -- Track individual scanned physical cards
 CREATE TABLE IF NOT EXISTS vault_cards (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL, -- References auth system
+    user_id TEXT NOT NULL, -- References auth id
     booster_id INTEGER NOT NULL, -- References vault_boosters.id
     
     -- Physical card identifier (GLOBALLY UNIQUE - prevents double scanning)
