@@ -1,5 +1,8 @@
+"use client";
 import { beep } from "@/lib/beep";
-import { IDetectedBarcode, Scanner } from "@yudiel/react-qr-scanner";
+import { IDetectedBarcode, Scanner } from "@/scanner/src";
+
+// import type { IDetectedBarcode } from "@yudiel/react-qr-scanner";
 import { useRef } from "react";
 
 export default function CardScanner(props: {
@@ -12,8 +15,6 @@ export default function CardScanner(props: {
 }) {
   const latestScannedTinyUrl = useRef<string | null>(null);
   const scannedTinyUrls = useRef<Map<string, number>>(new Map());
-
-  console.log("re-render");
 
   async function handleScan(detectedCodes: IDetectedBarcode[]) {
     let detectedValues = detectedCodes.map((s) => s.rawValue);
@@ -90,12 +91,14 @@ export default function CardScanner(props: {
         formats={["qr_code", "rm_qr_code"]}
         components={{
           tracker: highlightCodeOnCanvas,
+          torch: true, // Show torch/flashlight button (if supported)
+          zoom: true, // Show zoom control (if supported)
         }}
         onScan={(detectedCodes: IDetectedBarcode[]) => {
           handleScan(detectedCodes);
         }}
         sound={false}
-        onError={(error: any) => {
+        onError={(error: unknown) => {
           if (document.getElementById("result")) {
             document.getElementById("result")!.innerHTML = JSON.stringify(
               error,
