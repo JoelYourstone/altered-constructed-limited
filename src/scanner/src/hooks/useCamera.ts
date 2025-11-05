@@ -30,6 +30,7 @@ export default function useCamera() {
         throw new Error("this browser has no Stream API support");
       }
 
+      console.log("initial constraints", constraints);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: constraints,
@@ -63,8 +64,28 @@ export default function useCamera() {
 
       const [track] = stream.getVideoTracks();
 
+      const trackCapabilities = track.getCapabilities() as any;
+      console.log("capabilities", trackCapabilities);
+
       setSettings(track.getSettings());
-      setCapabilities(track?.getCapabilities?.() ?? {});
+      const capabilities = {
+        ...(track.getCapabilities() ?? {}),
+        // Force focus mode to continuous if it is supported
+        ...(trackCapabilities.focusMode &&
+        trackCapabilities.focusMode.includes("continuous")
+          ? { advanced: [{ focusMode: "continuous" }] }
+          : {}),
+      };
+      setCapabilities(capabilities);
+
+      if (!(track.getCapabilities() as any).focusMode?.includes("continuous")) {
+        alert(
+          "Focus mode not supported. Supported settings: " +
+            Object.keys(track.getCapabilities()).join(", ")
+        );
+      }
+
+      console.log(track.getSettings());
 
       currentStream.current = stream;
       currentVideoTrack.current = track;
