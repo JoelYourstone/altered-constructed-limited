@@ -206,14 +206,6 @@ export function Scanner(props: IScannerProps) {
     );
   }, []);
 
-  useEffect(() => {
-    return () => {
-      console.log("--------------------------------");
-      console.log("unmounting Scanner");
-      console.log("--------------------------------");
-    };
-  }, []);
-
   const { startScanning, stopScanning } = useScanner({
     videoElementRef: videoRef,
     onScan: onScan,

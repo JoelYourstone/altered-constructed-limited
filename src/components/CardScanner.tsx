@@ -88,7 +88,7 @@ export default function CardScanner(props: {
     <div>
       <Scanner
         allowMultiple
-        formats={["qr_code", "rm_qr_code"]}
+        formats={["qr_code"]}
         components={{
           tracker: highlightCodeOnCanvas,
           torch: true, // Show torch/flashlight button (if supported)

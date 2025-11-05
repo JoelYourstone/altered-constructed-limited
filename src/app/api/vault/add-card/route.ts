@@ -88,8 +88,6 @@ export async function POST(request: NextRequest) {
         .bind(boosterId)
         .all<{ card_data: string }>();
 
-      console.log("cardsResult", cardsResult);
-
       const cards = cardsResult.results || [];
 
       let heroCount = 0;
@@ -99,8 +97,6 @@ export async function POST(request: NextRequest) {
 
       cards.forEach((existingCard) => {
         const data = JSON.parse(existingCard.card_data) as CardData;
-        console.log("card", data);
-        console.log("card.cardType", data.cardType);
         if (data.cardType.reference === "HERO") heroCount++;
         else if (data.rarity.reference === "COMMON") commonCount++;
         else if (data.rarity.reference === "RARE") rareCount++;

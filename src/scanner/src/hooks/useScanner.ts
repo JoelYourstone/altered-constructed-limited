@@ -143,7 +143,6 @@ export default function useScanner(props: IUseScannerProps) {
     hasStartedRef.current = true;
 
     const current = performance.now();
-    console.log("starting scanning", current, window);
 
     const initialState = {
       lastScan: current,

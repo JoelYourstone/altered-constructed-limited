@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     if (!cardScanResponse.ok) {
       console.error("Failed to scan card:", cardScanResponse.statusText);
-      console.log(await cardScanResponse.text());
+      console.error(await cardScanResponse.text());
       return NextResponse.json(
         { error: "Failed to scan card" },
         { status: cardScanResponse.status }
