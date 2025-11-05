@@ -78,10 +78,10 @@ export default function useCamera() {
       };
       setCapabilities(capabilities);
 
-      if (!(track.getCapabilities() as any).focusMode?.includes("continuous")) {
+      if ((track.getCapabilities() as any).focusMode) {
         alert(
-          "Focus mode not supported. Supported settings: " +
-            Object.keys(track.getCapabilities()).join(", ")
+          "Focus mode has the following possible values: " +
+            trackCapabilities.focusMode.join(", ")
         );
       }
 
