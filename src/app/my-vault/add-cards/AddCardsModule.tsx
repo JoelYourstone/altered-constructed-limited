@@ -65,16 +65,10 @@ export default function AddCardsModule() {
         return;
       }
 
-      const response = await fetch(`/api/cards/${cardObject.card.reference}`);
-      const data = (await response.json()) as CardData;
-
       const cardRequest = {
         uniqueToken: tinyUrl,
-        reference: data.reference,
-        card: data,
+        reference: cardObject.card.reference,
       } satisfies AddCardRequest;
-
-      console.log(data);
 
       // Add card to vault using database
       await addCardMutation.mutateAsync(cardRequest);

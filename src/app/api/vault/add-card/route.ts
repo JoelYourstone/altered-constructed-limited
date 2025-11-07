@@ -6,7 +6,6 @@ import type { CardData } from "@/lib/card-data";
 export interface AddCardRequest {
   uniqueToken: string;
   reference: string;
-  card: CardData;
 }
 
 export async function POST(request: NextRequest) {
@@ -19,7 +18,7 @@ export async function POST(request: NextRequest) {
 
     const userId = session.user.email;
     const body = (await request.json()) as AddCardRequest;
-    const { uniqueToken, reference, card } = body;
+    const { uniqueToken, reference } = body;
 
     const { env } = getCloudflareContext();
 
@@ -34,6 +33,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "Card already scanned", duplicate: true },
         { status: 409 }
+      );
+    }
+
+    const cardResponse = await fetch(
+      `https://api.altered.gg/public/cards/${reference}?locale=en-us`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      }
+    );
+    const card = (await cardResponse.json()) as CardData;
+
+    const forbiddenTypes = ["TOKEN", "TOKEN_LANDMARK_PERMANENT", "TOKEN_MANA"];
+
+    if (forbiddenTypes.includes(card.cardType.reference)) {
+      return NextResponse.json(
+        { error: "Card type not allowed" },
+        { status: 400 }
       );
     }
 
