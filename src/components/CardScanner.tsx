@@ -6,10 +6,7 @@ import { IDetectedBarcode, Scanner } from "@/scanner/src";
 import { useRef } from "react";
 
 export default function CardScanner(props: {
-  onFullCardScan?: (
-    tinyUrl: string,
-    cardObject: { card: { imagePath: string; reference: string } }
-  ) => void;
+  onFullCardScan?: (tinyUrl: string, reference: string) => void;
   onTinyUrlScan?: (tinyUrl: string) => void;
   onFailedScan?: (tinyUrl: string | null, error: string) => void;
 }) {
@@ -52,11 +49,9 @@ export default function CardScanner(props: {
           props.onFailedScan?.(tinyUrl, "Failed to fetch card data");
           continue;
         }
-        const cardObject = (await cardScanResponse.json()) as {
-          card: { imagePath: string; reference: string };
-        };
+        const reference = (await cardScanResponse.text()) as string;
 
-        props.onFullCardScan?.(tinyUrl, cardObject);
+        props.onFullCardScan?.(tinyUrl, reference);
       } catch (error) {
         props.onFailedScan?.(tinyUrl, `Error scanning card: ${error}`);
       }

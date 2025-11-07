@@ -39,10 +39,7 @@ export default function AddCardsModule() {
     }
   }
 
-  async function handleFullCardScan(
-    tinyUrl: string,
-    cardObject: { card: { imagePath: string; reference: string } }
-  ) {
+  async function handleFullCardScan(tinyUrl: string, reference: string) {
     try {
       const cardInVault = [
         ...(vaultState?.activeBoosters || []),
@@ -67,7 +64,7 @@ export default function AddCardsModule() {
 
       const cardRequest = {
         uniqueToken: tinyUrl,
-        reference: cardObject.card.reference,
+        reference: reference,
       } satisfies AddCardRequest;
 
       // Add card to vault using database
@@ -82,9 +79,7 @@ export default function AddCardsModule() {
           error.message.includes("limit reached") ||
           error.message.includes("not active")
         ) {
-          const response = await fetch(
-            `/api/cards/${cardObject.card.reference}`
-          );
+          const response = await fetch(`/api/cards/${reference}`);
           const data = (await response.json()) as CardData;
 
           addFailedScanMutation.mutate({

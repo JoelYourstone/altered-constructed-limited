@@ -15,26 +15,24 @@ export async function GET(request: NextRequest) {
 
   try {
     const cardScanResponse = await fetch(
-      `https://browser-worker.joel-yourstone-85e.workers.dev/?code=${code}`,
+      `https://api.altered.gg/qr-code/${code}`,
       {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${env.QR_TOKEN}`,
-        },
+        method: "HEAD",
+        redirect: "manual",
       }
     );
 
-    if (!cardScanResponse.ok) {
-      console.error("Failed to scan card:", cardScanResponse.statusText);
-      console.error(await cardScanResponse.text());
+    const location = cardScanResponse.headers.get("Location");
+    if (!location) {
       return NextResponse.json(
         { error: "Failed to scan card" },
-        { status: cardScanResponse.status }
+        { status: 400 }
       );
     }
 
-    const cardScan = await cardScanResponse.json();
-    return NextResponse.json(cardScan, { status: 200 });
+    const reference = location.split("/").pop();
+
+    return new NextResponse(reference, { status: 200 });
   } catch (error) {
     console.error("Error fetching card GUID:", error);
     return NextResponse.json(
