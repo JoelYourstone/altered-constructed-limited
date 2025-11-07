@@ -94,12 +94,20 @@ export function PlayerVault({
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-semibold">Boosters in Vault</h2>
             {!player && (
-              <Link
-                href="/my-vault/add-cards"
-                className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-4 py-2"
-              >
-                + Add Cards
-              </Link>
+              <div className="flex gap-2">
+                <Link
+                  href="/my-vault/import-csv"
+                  className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-foreground/5 text-sm px-4 py-2"
+                >
+                  📄 Import CSV
+                </Link>
+                <Link
+                  href="/my-vault/add-cards"
+                  className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm px-4 py-2"
+                >
+                  + Add Cards
+                </Link>
+              </div>
             )}
           </div>
 

@@ -113,12 +113,20 @@ export default function AddCardsModule() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Link
-        href="/my-vault"
-        className="text-sm text-foreground/70 hover:text-foreground transition-colors py-2 px-4  block"
-      >
-        ← Back to My Vault
-      </Link>
+      <div className="flex justify-between items-center py-2 px-4">
+        <Link
+          href="/my-vault"
+          className="text-sm text-foreground/70 hover:text-foreground transition-colors"
+        >
+          ← Back to My Vault
+        </Link>
+        <Link
+          href="/my-vault/import-csv"
+          className="text-sm text-foreground/70 hover:text-foreground transition-colors"
+        >
+          Or import from CSV →
+        </Link>
+      </div>
       {/* Scanner */}
       <div className="relative">
         <div className="aspect-square w-full max-w-md mx-auto rounded-lg overflow-hidden border border-black/[.08] dark:border-white/[.145]">
