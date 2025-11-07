@@ -566,10 +566,10 @@ export default function ImportCsvModule() {
                   rare/unique.
                 </p>
                 <pre className="text-xs bg-background p-3 rounded border border-black/8 dark:border-white/[.145] overflow-x-auto">
-                  {`Name;Faction;Rarity;Set;Reference;IsHero
-Flawed Prototype;Axiom;Unique;Trial by Frost;ALT_ALIZE_B_AX_38_U_15805;false
-Ordis Overseer;Yzmir;Rare;Trial by Frost;ALT_ALIZE_B_OR_34_R2;false
-Akesha;Axiom;Common;Core Set;ALT_CORE_B_AX_01_C;true
+                  {`Name;Faction;Rarity;Set;Type;SubType;Reference
+Fen & Crowbar;Lyra;Common;Trial by Frost;Hero;;ALT_ALIZE_B_LY_03_C
+Arjun & Spike;Muna;Common;Trial by Frost;Hero;;ALT_ALIZE_B_MU_02_C
+Auraq & Kibble;Lyra;Common;Trial by Frost;Hero;;ALT_ALIZE_B_LY_02_C
 ...`}
                 </pre>
               </div>
