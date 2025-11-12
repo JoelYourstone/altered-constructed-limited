@@ -120,7 +120,7 @@ export function PlayerVault({
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-xl font-semibold">
-                      {booster.set_name}
+                      {booster.set_name} ({booster.id})
                     </h3>
                   </div>
                   <div className="text-right">
@@ -140,14 +140,28 @@ export function PlayerVault({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="grid grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <p className="text-foreground/60">Heroes</p>
+                    <p className="font-semibold">
+                      {booster.cards.reduce(
+                        (sum, card) =>
+                          sum +
+                          (card.card_data.cardType.reference === "HERO"
+                            ? 1
+                            : 0),
+                        0
+                      )}
+                    </p>
+                  </div>
                   <div>
                     <p className="text-foreground/60">Common</p>
                     <p className="font-semibold">
                       {booster.cards.reduce(
                         (sum, card) =>
                           sum +
-                          (card.card_data.rarity.reference === "COMMON"
+                          (card.card_data.cardType.reference !== "HERO" &&
+                          card.card_data.rarity.reference === "COMMON"
                             ? 1
                             : 0),
                         0

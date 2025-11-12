@@ -1,10 +1,8 @@
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(request: NextRequest) {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
-  const { env } = getCloudflareContext();
 
   if (!code) {
     return NextResponse.json(
