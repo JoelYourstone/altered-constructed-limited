@@ -17,19 +17,16 @@ export default function AllCardsPage() {
   let allCards: CardViewData[] = allBoosters
     .flatMap((booster) => booster.cards)
     .sort((a, b) => {
-      const rarityOrder = ["UNIQUE", "RARE", "COMMON"];
-      return (
-        rarityOrder.indexOf(a.card_data.rarity.reference) -
-        rarityOrder.indexOf(b.card_data.rarity.reference)
-      );
-    })
-    .sort((a, b) => {
-      if (a.card_data.cardType.reference === "HERO") {
-        return -1;
-      } else if (b.card_data.cardType.reference === "HERO") {
-        return 1;
+      // First sort by faction
+      const factionA = a.card_data.mainFaction.name.toLowerCase();
+      const factionB = b.card_data.mainFaction.name.toLowerCase();
+
+      if (factionA !== factionB) {
+        return factionA.localeCompare(factionB);
       }
-      return 0;
+
+      // Then sort alphabetically by card name
+      return a.card_data.name.localeCompare(b.card_data.name);
     });
 
   // filters
